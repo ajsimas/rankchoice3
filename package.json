@@ -1,0 +1,23 @@
+{
+  "name": "try3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ajsimas/rankchoice3.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ajsimas/rankchoice3/issues"
+  },
+  "homepage": "https://github.com/ajsimas/rankchoice3#readme",
+  "dependencies": {
+    "tedious": "^15.1.2"
+  }
+}
