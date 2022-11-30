@@ -2,7 +2,6 @@
 const express = require('express');
 const engine = require('ejs-mate');
 const {Poll} = require('./rankchoice.js');
-const {connection, createPoll} = require('./sql.js');
 
 // initialize express
 const app = express();
@@ -15,8 +14,12 @@ app.set('view engine', 'ejs');
 app.get('/', (req, res) => res.render('homepage'));
 app.get('/poll/create', (req, res) => res.render('create'));
 app.post('/poll/create', (req, res) => {
-  createPoll(new Poll(req));
+  const poll = (new Poll).create(req.body);
+  const pollWebId = poll.webId;
+  res.redirect(`/poll/id/${pollWebId}`);
+});
+app.get('/poll/id/:id', (req, res) => {
+  const poll = (new Poll).load(req.params.id);
 });
 
-app.listen(8080, () => { });
-connection.connect();
+app.listen(8080, () => {});
