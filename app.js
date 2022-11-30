@@ -1,8 +1,8 @@
 // import modules
 const express = require('express');
 const engine = require('ejs-mate');
-const rankchoice = require('./rankchoice.js');
-const {connection} = require('./sql.js');
+const {Poll} = require('./rankchoice.js');
+const {connection, createPoll} = require('./sql.js');
 
 // initialize express
 const app = express();
@@ -14,7 +14,9 @@ app.set('view engine', 'ejs');
 // Express routes
 app.get('/', (req, res) => res.render('homepage'));
 app.get('/poll/create', (req, res) => res.render('create'));
-app.post('/poll/create', (req, res) => rankchoice.createPoll(req));
+app.post('/poll/create', (req, res) => {
+  createPoll(new Poll(req));
+});
 
 app.listen(8080, () => { });
 connection.connect();

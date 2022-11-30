@@ -1,10 +1,18 @@
 /**
- * Function takes req object from express and uses values off 'body' to create
- * a new poll.
- * @param {*} req
+ * Represents a poll
  */
-function createPoll(req) {
-  console.log(req.body);
+class Poll {
+  /**
+   * Creates a poll
+   * @param {object} req from express
+   */
+  constructor(req) {
+    this.name = req.body.name;
+    this.candidates = {};
+    for (const [key, value] of Object.entries(req.body)) {
+      if (key.match(/^option(?:\d|10)$/)) this.candidates[key] = value;
+    }
+  }
 }
 
-module.exports = {createPoll};
+module.exports = {Poll};
