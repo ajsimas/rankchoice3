@@ -43,6 +43,53 @@ function createPoll(poll) {
   connection.execSql(request);
 }
 
+/**
+ * loads poll from SQL
+ * @param {string} webId
+ * @return {Promise}
+ */
+function loadPoll(webId) {
+  const query = `SELECT poll_id,name
+  FROM poll
+  WHERE poll_web_id = '${webId}'`;
+  const promise = new Promise((resolve, reject) => {
+    const request = new Request(query, (err, rowCount, rows) => {
+      const results = [];
+      results.push(rows[0][0].value);
+      results.push(rows[0][1].value);
+      resolve(results);
+    });
+    connection.execSql(request);
+  });
+  return promise;
+}
+
+/**
+ * @param {int} pollId
+ * @return {promise}
+ */
+function loadCandidates(pollId) {
+  const query = `SELECT candidate_id,option_num,name
+  FROM candidate
+  WHERE poll_id = ${pollId}
+  ORDER BY option_num ASC`;
+  const promise = new Promise((resolve, reject) => {
+    const request = new Request(query, (err, rowCount, rows) => {
+      const candidates = [];
+      for (const row of rows) {
+        /* console.log('new row ' + JSON.stringify(row)); */
+        const candidate = {};
+        candidate.id = row[0].value;
+        candidate.optionNum = row[1].value;
+        candidate.name = row[2].value;
+        candidates.push(candidate);
+      }
+      resolve(candidates);
+    });
+    connection.execSql(request);
+  });
+  return promise;
+}
 
 const connection = new Connection(config);
 connection.on('connect', function(err) {
@@ -52,4 +99,4 @@ connection.on('connect', function(err) {
 
 connection.connect();
 
-module.exports = {connection, createPoll};
+module.exports = {connection, createPoll, loadPoll, loadCandidates};

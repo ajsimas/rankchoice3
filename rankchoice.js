@@ -25,7 +25,14 @@ class Poll {
    * @param {int} webId
    * @return {object}
    */
-  load(webId) {
+  async load(webId) {
+    await sql.loadPoll(webId).then((results) => {
+      this.pollId = results[0];
+      this.name = results[1];
+    });
+    await sql.loadCandidates(this.pollId).then((results) => {
+      this.candidates = results;
+    });
     return this;
   }
   /**
