@@ -21,6 +21,7 @@ const config = {
 /**
  * poll object is used to create database entries
  * @param {object} poll poll object
+ * @return {promise}
  */
 function createPoll(poll) {
   const query = `INSERT INTO poll (poll_web_id,name,date_created,date_modified) OUTPUT Inserted.poll_id VALUES
@@ -96,11 +97,11 @@ function loadCandidates(pollId) {
 }
 
 const connection = new Connection(config);
-connection.on('connect', function (err) {
+connection.on('connect', function(err) {
   if (err) console.log(err);
   else console.log('Connected');
 });
 
 connection.connect();
 
-module.exports = { connection, createPoll, loadPoll, loadCandidates };
+module.exports = {connection, createPoll, loadPoll, loadCandidates};
