@@ -1,0 +1,28 @@
+<% layout('layouts/boilerplate') %>
+<style>
+  .rankInput{
+    width: 4rem;
+    display: inline;
+  }
+</style>
+<div class="container my-3">
+  <h1 class="text-center"><%= poll.name %></h1>
+  <div class="text-center">
+    <form class="d-inline-block mx-auto text-start" action="/poll/<%= poll.webId %>/vote" method="POST" style="max-width: 500px;">
+      <% for(let i=0; i < poll.candidates.length; i++) { %>
+        <div class="my-2">
+          <input class="form-control rankInput" <% if(false){ %>
+            value="<%= currentVotes[i].rank %>"
+          <% } %>
+          name="<%=poll.candidates[i].id%>" type="number" id="<%=poll.candidates[i].id%>" min="0" max="<%= poll.candidates.length  %>">
+          <label class="form-label" for="<%=poll.candidates[i].id%>">
+            <%= poll.candidates[i].name %>
+          </label>
+        </div>
+        <% } %>
+        <div class="mx-auto text-center">
+          <button class="btn btn-primary">Vote</button>
+        </div>
+    </form>
+  </div>
+</div>

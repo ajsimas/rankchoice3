@@ -26,6 +26,7 @@ class Poll {
    * @return {object}
    */
   async load(webId) {
+    this.webId = webId;
     await sql.loadPoll(webId).then((results) => {
       this.pollId = results[0];
       this.name = results[1];

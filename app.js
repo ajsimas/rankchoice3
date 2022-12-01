@@ -20,6 +20,7 @@ app.post('/poll/create', (req, res) => {
 });
 app.get('/poll/id/:id', (req, res) => {
   const poll = (new Poll).load(req.params.id);
+  poll.then((poll) => res.render('poll', {poll}));
 });
 
 app.listen(8080, () => {});
