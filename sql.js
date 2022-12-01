@@ -25,22 +25,26 @@ const config = {
 function createPoll(poll) {
   const query = `INSERT INTO poll (poll_web_id,name,date_created,date_modified) OUTPUT Inserted.poll_id VALUES
     ('${poll.webId}','${poll.name}',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
-  const request = new Request(query, (err, rowCount, rows) => {
-    const pollId = rows[0][0].value;
-    let query = 'INSERT INTO candidate (poll_id,option_num,name,date_created,date_modified) VALUES ';
-    candidateQuery = [];
-    optionNum = 1;
-    for (const key of Object.getOwnPropertyNames(poll.candidates)) {
-      candidateQuery.push(`(${pollId},${optionNum},'${poll.candidates[key]}',
-        CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
-      optionNum++;
-    }
-    query += candidateQuery.join(',');
+  const promise = new Promise((resolve, reject) => {
     const request = new Request(query, (err, rowCount, rows) => {
+      const pollId = rows[0][0].value;
+      let query = 'INSERT INTO candidate (poll_id,option_num,name,date_created,date_modified) VALUES ';
+      candidateQuery = [];
+      optionNum = 1;
+      for (const key of Object.getOwnPropertyNames(poll.candidates)) {
+        candidateQuery.push(`(${pollId},${optionNum},'${poll.candidates[key]}',
+        CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
+        optionNum++;
+      }
+      query += candidateQuery.join(',');
+      const request = new Request(query, (err, rowCount, rows) => {
+        resolve();
+      });
+      connection.execSql(request);
     });
     connection.execSql(request);
   });
-  connection.execSql(request);
+  return promise;
 }
 
 /**
@@ -92,11 +96,11 @@ function loadCandidates(pollId) {
 }
 
 const connection = new Connection(config);
-connection.on('connect', function(err) {
+connection.on('connect', function (err) {
   if (err) console.log(err);
   else console.log('Connected');
 });
 
 connection.connect();
 
-module.exports = {connection, createPoll, loadPoll, loadCandidates};
+module.exports = { connection, createPoll, loadPoll, loadCandidates };

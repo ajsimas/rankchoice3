@@ -10,14 +10,14 @@ class Poll {
    * @param {object} body from express
    * @return {object} this
    */
-  create(body) {
+  async create(body) {
     this.name = body.name;
     this.candidates = {};
     this.webId = this.generatePollWebId();
     for (const [key, value] of Object.entries(body)) {
       if (key.match(/^option(?:\d|10)$/)) this.candidates[key] = value;
     }
-    sql.createPoll(this);
+    await sql.createPoll(this);
     return this;
   }
   /**

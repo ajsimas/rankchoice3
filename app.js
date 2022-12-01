@@ -15,12 +15,14 @@ app.get('/', (req, res) => res.render('homepage'));
 app.get('/poll/create', (req, res) => res.render('create'));
 app.post('/poll/create', (req, res) => {
   const poll = (new Poll).create(req.body);
-  const pollWebId = poll.webId;
-  res.redirect(`/poll/id/${pollWebId}`);
+  poll.then((poll) => {
+    const pollWebId = poll.webId;
+    res.redirect(`/poll/id/${pollWebId}`);
+  });
 });
 app.get('/poll/id/:id', (req, res) => {
   const poll = (new Poll).load(req.params.id);
   poll.then((poll) => res.render('poll', {poll}));
 });
 
-app.listen(8080, () => {});
+app.listen(8080);
