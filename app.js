@@ -2,11 +2,13 @@
 const express = require('express');
 const engine = require('ejs-mate');
 const {Poll} = require('./rankchoice.js');
+const {mySession} = require('./express-session');
 
 // initialize express
 const app = express();
 app.use(express.static('public'));
 app.use(express.urlencoded({extended: true}));
+app.use(mySession);
 app.engine('ejs', engine);
 app.set('view engine', 'ejs');
 
