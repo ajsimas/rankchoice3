@@ -19,17 +19,17 @@ app.post('/poll/create', (req, res) => {
   const poll = (new Poll).create(req.body);
   poll.then((poll) => {
     const pollWebId = poll.webId;
-    res.redirect(`/poll/id/${pollWebId}`);
+    res.redirect(`/poll/${pollWebId}`);
   });
 });
-app.get('/poll/id/:id', (req, res) => {
+app.get('/poll/:id', (req, res) => {
   const poll = (new Poll).load(req.params.id, req.session.id);
   poll.then((poll) => res.render('poll', {poll}));
 });
 app.post('/poll/:id/vote', async (req, res) => {
   const poll = await (new Poll).load(req.params.id);
   poll.recordVote(req.body, req.session.id).then(() => {
-    res.redirect(`/poll/id/${poll.webId}`);
+    res.redirect(`/poll/${poll.webId}`);
   });
 });
 
