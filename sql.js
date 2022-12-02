@@ -59,6 +59,7 @@ function loadPoll(webId) {
   WHERE poll_web_id = '${webId}'`;
   const promise = new Promise((resolve, reject) => {
     const request = new Request(query, (err, rowCount, rows) => {
+      if (err) console.log(err);
       const results = [];
       results.push(rows[0][0].value);
       results.push(rows[0][1].value);
@@ -96,6 +97,40 @@ function loadCandidates(pollId) {
   return promise;
 }
 
+/**
+ *
+ * @param {*} poll
+ * @param {*} body
+ * @param {*} sessionId
+ * @return {*}
+ */
+function recordVote(poll, body, sessionId) {
+  const promise = new Promise((resolve, reject) => {
+    const queries = [];
+    for (vote of Object.getOwnPropertyNames(body)) {
+      const query = `INSERT INTO vote (candidate_id,rankchoice,date_created,date_modified)
+        VALUES ('${vote}',${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+      queries.push(query);
+    }
+    /**
+     *
+     * @param {*} queries
+     */
+    function recursiveQueryChain(queries) {
+      const query = queries.shift();
+      const request = new Request(query, (err, rowCount, rows) => {
+        if (err) console.log(err);
+        if (!query) return;
+        recursiveQueryChain(queries);
+      });
+      connection.execSql(request);
+    }
+    recursiveQueryChain(queries);
+    resolve();
+  });
+  return promise;
+}
+
 const connection = new Connection(config);
 connection.on('connect', function(err) {
   if (err) console.log(err);
@@ -104,4 +139,4 @@ connection.on('connect', function(err) {
 
 connection.connect();
 
-module.exports = {connection, createPoll, loadPoll, loadCandidates};
+module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote};

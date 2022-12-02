@@ -23,8 +23,14 @@ app.post('/poll/create', (req, res) => {
   });
 });
 app.get('/poll/id/:id', (req, res) => {
-  const poll = (new Poll).load(req.params.id);
+  const poll = (new Poll).load(req.params.id, req.session.id);
   poll.then((poll) => res.render('poll', {poll}));
+});
+app.post('/poll/:id/vote', async (req, res) => {
+  const poll = await (new Poll).load(req.params.id);
+  poll.recordVote(req.body, req.session.id).then(() => {
+    res.redirect(`/poll/id/${poll.webId}`);
+  });
 });
 
 app.listen(8080);

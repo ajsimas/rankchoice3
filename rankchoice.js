@@ -24,10 +24,11 @@ class Poll {
    * Loads poll from db
    * @param {int} webId
    * @return {object}
+   * @param {*} sessionId
    */
-  async load(webId) {
+  async load(webId, sessionId) {
     this.webId = webId;
-    await sql.loadPoll(webId).then((results) => {
+    await sql.loadPoll(webId, sessionId).then((results) => {
       this.pollId = results[0];
       this.name = results[1];
     });
@@ -47,6 +48,15 @@ class Poll {
       id += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return id;
+  }
+  /**
+   *
+   * @param {*} body
+   * @param {*} sessionId
+   */
+  async recordVote(body, sessionId) {
+    await sql.recordVote(this, body, sessionId);
+    return this;
   }
 }
 
