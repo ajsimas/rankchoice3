@@ -82,8 +82,7 @@ function loadCandidates(pollId) {
   return promise;
 }
 
-function recordVote(poll, body, sessionId) {
-  /* lookupVoter(); */
+async function recordVote(poll, body, sessionId) {
   const promise = new Promise((resolve, reject) => {
     const queries = [];
     for (vote of Object.getOwnPropertyNames(body)) {
@@ -97,7 +96,9 @@ function recordVote(poll, body, sessionId) {
         const request = new Request(nextQuery, (err, rowCount, rows) => {
           recursiveQueryChain(queries);
         });
-        return connection.execSql(request);
+        console.log('saving vote');
+        connection.execSql(request);
+        return;
       } else {
         return Promise.resolve();
       }
