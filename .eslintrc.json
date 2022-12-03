@@ -11,6 +11,15 @@
         "sourceType": "module"
     },
     "rules": {
-        "max-len": ["error", {"code": 110}]
+        "max-len": ["error", {"code": 110}],
+        "require-jsdoc": ["error", {
+            "require": {
+                "FunctionDeclaration": false,
+                "MethodDefinition": false,
+                "ClassDeclaration": false,
+                "ArrowFunctionExpression": false,
+                "FunctionExpression": false
+            }
+        }]
     }
 }

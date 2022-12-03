@@ -18,11 +18,6 @@ const config = {
   },
 };
 
-/**
- * poll object is used to create database entries
- * @param {object} poll poll object
- * @return {promise}
- */
 function createPoll(poll) {
   const query = `INSERT INTO poll (poll_web_id,name,date_created,date_modified) OUTPUT Inserted.poll_id VALUES
     ('${poll.webId}','${poll.name}',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
@@ -48,11 +43,6 @@ function createPoll(poll) {
   return promise;
 }
 
-/**
- * loads poll from SQL
- * @param {string} webId
- * @return {Promise}
- */
 function loadPoll(webId) {
   const query = `SELECT poll_id,name
   FROM poll
@@ -70,10 +60,6 @@ function loadPoll(webId) {
   return promise;
 }
 
-/**
- * @param {int} pollId
- * @return {promise}
- */
 function loadCandidates(pollId) {
   const query = `SELECT candidate_id,option_num,name
   FROM candidate
@@ -83,7 +69,6 @@ function loadCandidates(pollId) {
     const request = new Request(query, (err, rowCount, rows) => {
       const candidates = [];
       for (const row of rows) {
-        /* console.log('new row ' + JSON.stringify(row)); */
         const candidate = {};
         candidate.id = row[0].value;
         candidate.optionNum = row[1].value;
@@ -97,14 +82,8 @@ function loadCandidates(pollId) {
   return promise;
 }
 
-/**
- *
- * @param {*} poll
- * @param {*} body
- * @param {*} sessionId
- * @return {*}
- */
 function recordVote(poll, body, sessionId) {
+  /* lookupVoter(); */
   const promise = new Promise((resolve, reject) => {
     const queries = [];
     for (vote of Object.getOwnPropertyNames(body)) {
@@ -112,21 +91,32 @@ function recordVote(poll, body, sessionId) {
         VALUES ('${vote}',${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
       queries.push(query);
     }
-    /**
-     *
-     * @param {*} queries
-     */
-    function recursiveQueryChain(queries) {
-      const query = queries.shift();
-      const request = new Request(query, (err, rowCount, rows) => {
-        if (err) console.log(err);
-        if (!query) return;
-        recursiveQueryChain(queries);
-      });
-      connection.execSql(request);
+    async function recursiveQueryChain(queries) {
+      const nextQuery = queries.shift();
+      if (nextQuery) {
+        const request = new Request(nextQuery, (err, rowCount, rows) => {
+          recursiveQueryChain(queries);
+        });
+        return connection.execSql(request);
+      } else {
+        return Promise.resolve();
+      }
     }
     recursiveQueryChain(queries);
-    resolve();
+  });
+  return promise;
+}
+
+function lookupVoter(sessionId) {
+  const promise = new Promise((resolve, reject) => {
+    query = `SELECT voter_id,name
+      FROM voter
+      WHERE session_id ${sessionId}`;
+    const request = new Request(query, (err, rowCount, rows) => {
+      if (err) console.log(err);
+      console.log(rows);
+    });
+    connection.execSql(request);
   });
   return promise;
 }

@@ -23,7 +23,7 @@ app.post('/poll/create', (req, res) => {
   });
 });
 app.get('/poll/:id', (req, res) => {
-  const poll = (new Poll).load(req.params.id, req.session.id);
+  const poll = (new Poll).load(req.params.id);
   poll.then((poll) => res.render('poll', {poll}));
 });
 app.post('/poll/:id/vote', async (req, res) => {

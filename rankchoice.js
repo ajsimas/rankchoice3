@@ -1,15 +1,7 @@
 // import moduels
 const sql = require('./sql.js');
 
-/**
- * Represents a poll
- */
 class Poll {
-  /**
-   * Creates a poll
-   * @param {object} body from express
-   * @return {object} this
-   */
   async create(body) {
     this.name = body.name;
     this.candidates = {};
@@ -20,15 +12,10 @@ class Poll {
     await sql.createPoll(this);
     return this;
   }
-  /**
-   * Loads poll from db
-   * @param {int} webId
-   * @return {object}
-   * @param {*} sessionId
-   */
-  async load(webId, sessionId) {
+
+  async load(webId = this.webId) {
     this.webId = webId;
-    await sql.loadPoll(webId, sessionId).then((results) => {
+    await sql.loadPoll(webId).then((results) => {
       this.pollId = results[0];
       this.name = results[1];
     });
@@ -37,10 +24,7 @@ class Poll {
     });
     return this;
   }
-  /**
- * Returns a unique randomly generate 32 character identifier
- * @return {string} 32 character identifier
- */
+
   generatePollWebId() {
     const characters = 'abcdefghjklmnpqrstuvwxyz';
     let id = '';
@@ -49,13 +33,11 @@ class Poll {
     }
     return id;
   }
-  /**
-   *
-   * @param {*} body
-   * @param {*} sessionId
-   */
+
   async recordVote(body, sessionId) {
-    await sql.recordVote(this, body, sessionId);
+    sql.recordVote(this, body, sessionId).then(() => {
+      this.load();
+    });
     return this;
   }
 }
