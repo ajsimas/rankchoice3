@@ -35,7 +35,7 @@ class Poll {
   }
 
   async recordVote(body, sessionId) {
-    sql.recordVote(this, body, sessionId).then(() => {
+    await sql.recordVote(this, body, sessionId).then(() => {
       console.log('hereh');
       this.load();
     });

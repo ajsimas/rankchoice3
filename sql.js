@@ -82,28 +82,19 @@ function loadCandidates(pollId) {
   return promise;
 }
 
-async function recordVote(poll, body, sessionId) {
+function recordVote(poll, body, sessionId) {
   const promise = new Promise((resolve, reject) => {
-    const queries = [];
+    let query = 'INSERT INTO vote (candidate_id,rankchoice,date_created,date_modified) VALUES ';
+    const queryValues = [];
     for (vote of Object.getOwnPropertyNames(body)) {
-      const query = `INSERT INTO vote (candidate_id,rankchoice,date_created,date_modified)
-        VALUES ('${vote}',${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
-      queries.push(query);
+      queryValues.push(`('${vote}',${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
     }
-    async function recursiveQueryChain(queries) {
-      const nextQuery = queries.shift();
-      if (nextQuery) {
-        const request = new Request(nextQuery, (err, rowCount, rows) => {
-          recursiveQueryChain(queries);
-        });
-        console.log('saving vote');
-        connection.execSql(request);
-        return;
-      } else {
-        return Promise.resolve();
-      }
-    }
-    recursiveQueryChain(queries);
+    query = query + queryValues.join(',');
+    console.log(query);
+    const request = new Request(query, (err, rowCount, rows) => {
+      resolve();
+    });
+    connection.execSql(request);
   });
   return promise;
 }
