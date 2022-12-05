@@ -23,14 +23,16 @@ app.post('/poll/create', (req, res) => {
   });
 });
 app.get('/poll/:id', (req, res) => {
-  const poll = (new Poll).load(req.params.id);
+  const poll = (new Poll).load(req.params.id, req.session.id);
   poll.then((poll) => {
     res.render('poll', {poll});
-    console.log(JSON.stringify(poll));
+    if (poll.currentVoter !== undefined) {
+      console.log(poll.currentVoter);
+    }
   });
 });
 app.post('/poll/:id/vote', async (req, res) => {
-  const poll = await (new Poll).load(req.params.id);
+  const poll = await (new Poll).load(req.params.id, req.session.id);
   poll.recordVote(req.body, req.session.id).then(() => {
     res.redirect(`/poll/${poll.webId}`);
   });

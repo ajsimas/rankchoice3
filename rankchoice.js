@@ -13,7 +13,7 @@ class Poll {
     return this;
   }
 
-  async load(webId = this.webId) {
+  async load(webId = this.webId, sessionId) {
     this.webId = webId;
     await sql.loadPoll(webId).then((results) => {
       this.pollId = results[0];
@@ -32,6 +32,9 @@ class Poll {
         vote.rankChoice = result[3].value;
         this.votes.push(vote);
       }
+    });
+    await sql.lookupVoter(sessionId, this.pollId).then((results) => {
+      this.currentVoter = results;
     });
     return this;
   }

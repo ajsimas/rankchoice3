@@ -12,8 +12,8 @@
       <div class="d-inline-block text-start" style="max-width: 700px;">
         <% for(let i=0; i < poll.candidates.length; i++) { %>
           <div class="my-2">
-            <input class="form-control rankInput" <% if(false){ %>
-              value="<%= currentVotes[i].rank %>"
+            <input class="form-control rankInput" <% if(poll.currentVoter !== undefined){ %>
+              value="<%= 3 %>"
             <% } %>
             name="<%=poll.candidates[i].id%>" type="number" id="<%=poll.candidates[i].id%>" min="0" max="<%= poll.candidates.length  %>">
             <label class="form-label" for="<%=poll.candidates[i].id%>">
@@ -32,3 +32,6 @@
     </form>
   </div>
 </div>
+<%= JSON.stringify(poll) %> 
+<br>
+<%= JSON.stringify(poll.currentVoter) %> 

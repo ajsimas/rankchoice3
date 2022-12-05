@@ -97,7 +97,7 @@ function loadVotes(pollId) {
 }
 
 async function recordVote(poll, body, sessionId) {
-  voter = await lookupVoter(sessionId, poll.pollId);
+  const voter = await lookupVoter(sessionId, poll.pollId);
   if (!voter) {
     await saveVoter(sessionId, poll.pollId, body.name);
   }
@@ -127,12 +127,18 @@ function isNumeric(str) {
 
 function lookupVoter(sessionId, pollId) {
   const promise = new Promise((resolve, reject) => {
-    const query = `SELECT TOP (1) voter_id,name
+    const query = `SELECT TOP (1) voter_id,session_id,name
       FROM voter
       WHERE session_id='${sessionId}' AND poll_id='${pollId}'`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
-      if (rows.length !== 0) resolve(rows[0][0].value);
+      if (rows.length !== 0) {
+        const voter = {};
+        voter.voterId = rows[0][0].value;
+        voter.sessionId = rows[0][1].value;
+        voter.name = rows[0][2].value;
+        resolve(voter);
+      }
       resolve();
     });
     connection.execSql(request);
@@ -161,4 +167,4 @@ connection.on('connect', function(err) {
 
 connection.connect();
 
-module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote, loadVotes};
+module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote, loadVotes, lookupVoter};
