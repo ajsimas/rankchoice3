@@ -179,5 +179,4 @@ connection.on('connect', function(err) {
 
 connection.connect();
 
-module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote, loadVotes, lookupVoter,
-  lookupVoterVotes};
+module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote, loadVotes, lookupVoter};

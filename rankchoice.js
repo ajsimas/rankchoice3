@@ -33,7 +33,6 @@ class Poll {
         this.currentVoter.votes = results;
       });
     }
-    console.log(JSON.stringify(this));
     return this;
   }
 

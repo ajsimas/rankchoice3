@@ -26,9 +26,6 @@ app.get('/poll/:id', (req, res) => {
   const poll = (new Poll).load(req.params.id, req.session.id);
   poll.then((poll) => {
     res.render('poll', {poll});
-    if (poll.currentVoter !== undefined) {
-      /* console.log(poll.currentVoter); */
-    }
   });
 });
 app.post('/poll/:id/vote', async (req, res) => {
