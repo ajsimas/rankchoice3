@@ -22,6 +22,17 @@ class Poll {
     await sql.loadCandidates(this.pollId).then((results) => {
       this.candidates = results;
     });
+    await sql.loadVotes(this.pollId).then((results) => {
+      this.votes =[];
+      for (const result of results) {
+        const vote = {};
+        vote.candidateName = result[0].value;
+        vote.candidateId = result[1].value;
+        vote.voterId = result[2].value;
+        vote.rankChoice = result[3].value;
+        this.votes.push(vote);
+      }
+    });
     return this;
   }
 
@@ -35,10 +46,7 @@ class Poll {
   }
 
   async recordVote(body, sessionId) {
-    await sql.recordVote(this, body, sessionId).then(() => {
-      console.log('hereh');
-      this.load();
-    });
+    await sql.recordVote(this, body, sessionId);
     return this;
   }
 }

@@ -24,7 +24,10 @@ app.post('/poll/create', (req, res) => {
 });
 app.get('/poll/:id', (req, res) => {
   const poll = (new Poll).load(req.params.id);
-  poll.then((poll) => res.render('poll', {poll}));
+  poll.then((poll) => {
+    res.render('poll', {poll});
+    console.log(JSON.stringify(poll));
+  });
 });
 app.post('/poll/:id/vote', async (req, res) => {
   const poll = await (new Poll).load(req.params.id);

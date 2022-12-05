@@ -16,7 +16,7 @@ const mySession = session({
   }),
   resave: false,
   proxy: true,
-  saveUninitialized: false,
+  saveUninitialized: true,
 });
 
 module.exports = {mySession};

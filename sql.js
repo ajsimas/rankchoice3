@@ -82,16 +82,37 @@ function loadCandidates(pollId) {
   return promise;
 }
 
-function recordVote(poll, body, sessionId) {
+function loadVotes(pollId) {
+  const promise = new Promise((resolve, reject) => {
+    const query = `SELECT candidate.name, vote.candidate_id, vote.voter_id, vote.rankchoice
+    FROM vote
+    INNER JOIN candidate ON candidate.candidate_id=vote.candidate_id
+    WHERE candidate.poll_id = '${pollId}'`;
+    const request = new Request(query, (err, rowCount, rows) => {
+      resolve(rows);
+    });
+    connection.execSql(request);
+  });
+  return promise;
+}
+
+async function recordVote(poll, body, sessionId) {
+  voter = await lookupVoter(sessionId, poll.pollId);
+  if (!voter) {
+    await saveVoter(sessionId, poll.pollId, body.name);
+  }
   const promise = new Promise((resolve, reject) => {
     let query = 'INSERT INTO vote (candidate_id,rankchoice,date_created,date_modified) VALUES ';
     const queryValues = [];
     for (vote of Object.getOwnPropertyNames(body)) {
-      queryValues.push(`('${vote}',${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
+      if (isNumeric(vote)) {
+        queryValues.push(`('${vote}',${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
+      }
     }
     query = query + queryValues.join(',');
     console.log(query);
     const request = new Request(query, (err, rowCount, rows) => {
+      if (err) console.log(err);
       resolve();
     });
     connection.execSql(request);
@@ -99,14 +120,33 @@ function recordVote(poll, body, sessionId) {
   return promise;
 }
 
-function lookupVoter(sessionId) {
+function isNumeric(str) {
+  if (typeof str != 'string') return false;
+  return !isNaN(str) && !isNaN(parseFloat(str));
+}
+
+function lookupVoter(sessionId, pollId) {
   const promise = new Promise((resolve, reject) => {
-    query = `SELECT voter_id,name
+    const query = `SELECT TOP (1) voter_id,name
       FROM voter
-      WHERE session_id ${sessionId}`;
+      WHERE session_id='${sessionId}' AND poll_id='${pollId}'`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
-      console.log(rows);
+      if (rows.length !== 0) resolve(rows[0][0].value);
+      resolve();
+    });
+    connection.execSql(request);
+  });
+  return promise;
+}
+
+function saveVoter(sessionId, pollId, name) {
+  const promise = new Promise((resolve, reject) => {
+    const query = `INSERT INTO voter (session_id,poll_id,name,date_created,date_modified)
+      VALUES ('${sessionId}',${pollId},'${name}',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+    const request = new Request(query, (err, rowCount, rows) => {
+      if (err) console.log(err);
+      resolve();
     });
     connection.execSql(request);
   });
@@ -121,4 +161,4 @@ connection.on('connect', function(err) {
 
 connection.connect();
 
-module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote};
+module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote, loadVotes};
