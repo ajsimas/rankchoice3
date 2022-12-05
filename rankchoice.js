@@ -23,19 +23,17 @@ class Poll {
       this.candidates = results;
     });
     await sql.loadVotes(this.pollId).then((results) => {
-      this.votes =[];
-      for (const result of results) {
-        const vote = {};
-        vote.candidateName = result[0].value;
-        vote.candidateId = result[1].value;
-        vote.voterId = result[2].value;
-        vote.rankChoice = result[3].value;
-        this.votes.push(vote);
-      }
+      this.votes = results;
     });
     await sql.lookupVoter(sessionId, this.pollId).then((results) => {
       this.currentVoter = results;
     });
+    if (this.currentVoter !== undefined) {
+      await sql.loadVotes(this.pollId, this.currentVoter.voterId).then((results) => {
+        this.currentVoter.votes = results;
+      });
+    }
+    console.log(JSON.stringify(this));
     return this;
   }
 

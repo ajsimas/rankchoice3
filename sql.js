@@ -82,14 +82,24 @@ function loadCandidates(pollId) {
   return promise;
 }
 
-function loadVotes(pollId) {
+function loadVotes(pollId, voterId) {
   const promise = new Promise((resolve, reject) => {
-    const query = `SELECT candidate.name, vote.candidate_id, vote.voter_id, vote.rankchoice
+    let query = `SELECT candidate.name, vote.candidate_id, vote.voter_id, vote.rankchoice
     FROM vote
     INNER JOIN candidate ON candidate.candidate_id=vote.candidate_id
     WHERE candidate.poll_id = '${pollId}'`;
+    if (voterId !== undefined) query += ` AND vote.voter_id = '${voterId}'`;
     const request = new Request(query, (err, rowCount, rows) => {
-      resolve(rows);
+      const votes = [];
+      for (const row of rows) {
+        const vote = {};
+        vote.candidateName = row[0].value;
+        vote.candidateId = row[1].value;
+        vote.voterId = row[2].value;
+        vote.rankChoice = row[3].value;
+        votes.push(vote);
+      }
+      resolve(votes);
     });
     connection.execSql(request);
   });
@@ -97,20 +107,17 @@ function loadVotes(pollId) {
 }
 
 async function recordVote(poll, body, sessionId) {
-  const voter = await lookupVoter(sessionId, poll.pollId);
-  if (!voter) {
+  const voter = await lookupVoter(sessionId, poll.pollId) ||
     await saveVoter(sessionId, poll.pollId, body.name);
-  }
   const promise = new Promise((resolve, reject) => {
-    let query = 'INSERT INTO vote (candidate_id,rankchoice,date_created,date_modified) VALUES ';
+    let query = 'INSERT INTO vote (candidate_id,voter_id,rankchoice,date_created,date_modified) VALUES ';
     const queryValues = [];
-    for (vote of Object.getOwnPropertyNames(body)) {
+    for (const vote of Object.getOwnPropertyNames(body)) {
       if (isNumeric(vote)) {
-        queryValues.push(`('${vote}',${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
+        queryValues.push(`('${vote}',${voter.voterId},${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
       }
     }
     query = query + queryValues.join(',');
-    console.log(query);
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
       resolve();
@@ -149,10 +156,15 @@ function lookupVoter(sessionId, pollId) {
 function saveVoter(sessionId, pollId, name) {
   const promise = new Promise((resolve, reject) => {
     const query = `INSERT INTO voter (session_id,poll_id,name,date_created,date_modified)
+      OUTPUT INSERTED.voter_id,INSERTED.session_id,INSERTED.name
       VALUES ('${sessionId}',${pollId},'${name}',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
-      resolve();
+      const voter = {};
+      voter.voterId = rows[0][0].value;
+      voter.sessionId = rows[0][1].value;
+      voter.name = rows[0][2].value;
+      resolve(voter);
     });
     connection.execSql(request);
   });
@@ -167,4 +179,5 @@ connection.on('connect', function(err) {
 
 connection.connect();
 
-module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote, loadVotes, lookupVoter};
+module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote, loadVotes, lookupVoter,
+  lookupVoterVotes};

@@ -27,7 +27,7 @@ app.get('/poll/:id', (req, res) => {
   poll.then((poll) => {
     res.render('poll', {poll});
     if (poll.currentVoter !== undefined) {
-      console.log(poll.currentVoter);
+      /* console.log(poll.currentVoter); */
     }
   });
 });
