@@ -111,8 +111,13 @@ async function recordVote(poll, body, sessionId) {
     await saveVoter(sessionId, poll.pollId, body.name);
   for (const vote of Object.getOwnPropertyNames(body)) {
     if (isNumeric(vote)) {
-      const query = `INSERT INTO vote (candidate_id,voter_id,rankchoice,date_created, date_modified)
-        VALUES ('${vote}',${voter.voterId},${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+      const query = `UPDATE vote
+      SET rankchoice=${body[vote]},date_modified=CURRENT_TIMESTAMP
+      WHERE candidate_id=${vote} AND voter_id=${voter.voterId}
+      IF @@ROWCOUNT=0
+        INSERT INTO vote
+              (candidate_id,voter_id,rankchoice,date_created, date_modified)
+              VALUES (${vote},${voter.voterId},${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
       await recordVoteSql(query);
     }
   }
