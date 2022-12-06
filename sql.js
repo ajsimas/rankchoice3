@@ -109,15 +109,18 @@ function loadVotes(pollId, voterId) {
 async function recordVote(poll, body, sessionId) {
   const voter = await lookupVoter(sessionId, poll.pollId) ||
     await saveVoter(sessionId, poll.pollId, body.name);
-  const promise = new Promise((resolve, reject) => {
-    let query = 'INSERT INTO vote (candidate_id,voter_id,rankchoice,date_created,date_modified) VALUES ';
-    const queryValues = [];
-    for (const vote of Object.getOwnPropertyNames(body)) {
-      if (isNumeric(vote)) {
-        queryValues.push(`('${vote}',${voter.voterId},${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
-      }
+  for (const vote of Object.getOwnPropertyNames(body)) {
+    if (isNumeric(vote)) {
+      const query = `INSERT INTO vote (candidate_id,voter_id,rankchoice,date_created, date_modified)
+        VALUES ('${vote}',${voter.voterId},${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+      await recordVoteSql(query);
     }
-    query = query + queryValues.join(',');
+  }
+  return;
+}
+
+function recordVoteSql(query) {
+  const promise = new Promise((resolve, reject) => {
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
       resolve();
@@ -125,7 +128,7 @@ async function recordVote(poll, body, sessionId) {
     connection.execSql(request);
   });
   return promise;
-}
+};
 
 function isNumeric(str) {
   if (typeof str != 'string') return false;
