@@ -36,3 +36,5 @@ app.post('/poll/:id/vote', async (req, res) => {
 });
 
 app.listen(8080);
+
+console.log('test');
