@@ -12,11 +12,13 @@
       <div class="d-inline-block text-start" style="max-width: 700px;">
         <% for(let i=0; i < poll.candidates.length; i++) { %>
           <div class="my-2">
-            <input class="form-control rankInput" <% if(poll.currentVoter !== undefined){ %>
-              value="<%= poll.currentVoter.votes[i].rankChoice %>"
+            <input class="form-control rankInput"
+            <% if (poll.currentVoter && poll.currentVoter.votes[i] !== undefined) { %>
+              value="<%=  poll.currentVoter.votes[i].rankChoice %>"
             <% } %>
-            name="<%=poll.candidates[i].id%>" type="number" id="<%=poll.candidates[i].id%>" min="0" max="<%= poll.candidates.length  %>">
-            <label class="form-label" for="<%=poll.candidates[i].id%>">
+            name="<%=poll.candidates[i].optionNum%>" type="number" id="<%=poll.candidates[i].optionNum%>"
+              min="0" max="<%= poll.candidates.length  %>">
+            <label class="form-label" for="<%=poll.candidates[i].optionNum%>">
               <%= poll.candidates[i].name %>
             </label>
           </div>
