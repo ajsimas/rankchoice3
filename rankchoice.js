@@ -46,8 +46,16 @@ class Poll {
   }
 
   async recordVote(body, sessionId) {
-    await sql.recordVote(this, body, sessionId);
-    return this;
+    if (this.validateVote(body)) {
+      await sql.recordVote(this, body, sessionId);
+      return this;
+    }
+  }
+
+  validateVote(body) {
+    const reqCandidateCount = Object.keys(body).length - 1;
+    if (reqCandidateCount !== this.candidates.length) return false;
+    return true;
   }
 }
 
