@@ -7,6 +7,7 @@
 </style>
 <div class="container my-3">
   <h1 class="text-center"><%= poll.name %></h1>
+  <div class="text-center" id="error" style="width:auto"></div>
   <div class="text-center">
     <form action="/poll/<%= poll.webId %>/vote" method="POST">
       <div class="d-inline-block text-start" style="max-width: 700px;">
@@ -17,8 +18,8 @@
               value="<%=  poll.currentVoter.votes[i].rankChoice %>"
             <% } %>
             name="<%=poll.candidates[i].optionNum%>" type="number" id="<%=poll.candidates[i].optionNum%>"
-              min="0" max="<%= poll.candidates.length  %>">
-            <label class="form-label" for="<%=poll.candidates[i].optionNum%>">
+              min="1" max="<%= poll.candidates.length  %>">
+            <label class="form-label ms-2" for="<%=poll.candidates[i].optionNum%>">
               <%= poll.candidates[i].name %>
             </label>
           </div>
@@ -40,3 +41,4 @@
 </div>
 <%= JSON.stringify(poll) %> 
 <br>
+<script src="/js/js.js"></script>
