@@ -63,8 +63,8 @@ class Poll {
       }
     }
     if (reqCandidateCount !== this.candidates.length) return false;
-    if (!(Math.min(...ranksSubmitted) == 1)) return false;
-    // TODO - check for duplicate rankchoices
+    if (Math.min(...ranksSubmitted) != 1) return false;
+    if (new Set(ranksSubmitted).size != ranksSubmitted.length) return false;
     // TODO - rankchoice is consecutive
     return true;
   }
