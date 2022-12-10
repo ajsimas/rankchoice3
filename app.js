@@ -31,7 +31,11 @@ app.get('/poll/:id', (req, res) => {
 app.post('/poll/:id/vote', async (req, res) => {
   const poll = await (new Poll).load(req.params.id, req.session.id);
   poll.recordVote(req.body, req.session.id).then(() => {
-    res.redirect(`/poll/${poll.webId}`);
+    if (poll.voteRecorded) {
+      res.redirect(`/poll/${poll.webId}`);
+    } else {
+      // TODO respond 'your vote was not recorded'
+    }
   });
 });
 

@@ -47,25 +47,29 @@ class Poll {
 
   async recordVote(body, sessionId) {
     if (this.validateVote(body)) {
+      this.voteRecorded = true;
       await sql.recordVote(this, body, sessionId);
-      return this;
     } else {
-      // TODO
+      this.voteRecorded = false;
     }
+    return;
   }
 
   validateVote(body) {
-    const ranksSubmitted = [];
     const reqCandidateCount = Object.keys(body).length - 1;
+    const ranksSubmitted = [];
     for (const optionNum of Object.keys(body)) {
-      if (isNumeric(optionNum) && body[optionNum] != '') {
-        ranksSubmitted.push(body[optionNum]);
-      }
+      if (isNumeric(optionNum) && body[optionNum] != '') ranksSubmitted.push(body[optionNum]);
     }
+    ranksSubmitted.sort((a, b) => a - b);
+    // Check quantity of submitted votes is accurate
     if (reqCandidateCount !== this.candidates.length) return false;
+    // Check ranks start at 1
     if (Math.min(...ranksSubmitted) != 1) return false;
+    // Check that all ranks are unique
     if (new Set(ranksSubmitted).size != ranksSubmitted.length) return false;
-    // TODO - rankchoice is consecutive
+    // Check that ranks are consecutive
+    for (let i = 0; i < ranksSubmitted.length; i++) if (ranksSubmitted[i] != i + 1) return false;
     return true;
   }
 }
