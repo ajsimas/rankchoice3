@@ -20,7 +20,7 @@ const config = {
 
 function createPoll(poll) {
   const query = `INSERT INTO poll (poll_web_id,name,date_created,date_modified) OUTPUT Inserted.poll_id VALUES
-    ('${poll.webId}','${poll.name}',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+    ('${poll.webId}','${poll.name.replace(/'/, '\'\'')}',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
   const promise = new Promise((resolve, reject) => {
     const request = new Request(query, (err, rowCount, rows) => {
       const pollId = rows[0][0].value;
@@ -28,7 +28,7 @@ function createPoll(poll) {
       candidateQuery = [];
       optionNum = 1;
       for (const key of Object.getOwnPropertyNames(poll.candidates)) {
-        candidateQuery.push(`(${pollId},${optionNum},'${poll.candidates[key]}',
+        candidateQuery.push(`(${pollId},${optionNum},'${poll.candidates[key].replace(/'/, '\'\'')}',
         CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
         optionNum++;
       }
@@ -166,7 +166,7 @@ function saveVoter(sessionId, pollId, name) {
   const promise = new Promise((resolve, reject) => {
     const query = `INSERT INTO voter (session_id,poll_id,name,date_created,date_modified)
       OUTPUT INSERTED.voter_id,INSERTED.session_id,INSERTED.name
-      VALUES ('${sessionId}',${pollId},'${name}',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+      VALUES ('${sessionId}',${pollId},'${name.replace(/'/, '\'\'')}',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
       const voter = {};
