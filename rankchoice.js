@@ -49,14 +49,30 @@ class Poll {
     if (this.validateVote(body)) {
       await sql.recordVote(this, body, sessionId);
       return this;
+    } else {
+      // TODO
     }
   }
 
   validateVote(body) {
+    const ranksSubmitted = [];
     const reqCandidateCount = Object.keys(body).length - 1;
+    for (const optionNum of Object.keys(body)) {
+      if (isNumeric(optionNum) && body[optionNum] != '') {
+        ranksSubmitted.push(body[optionNum]);
+      }
+    }
     if (reqCandidateCount !== this.candidates.length) return false;
+    if (!(Math.min(...ranksSubmitted) == 1)) return false;
+    // TODO - check for duplicate rankchoices
+    // TODO - rankchoice is consecutive
     return true;
   }
+}
+
+function isNumeric(str) {
+  if (typeof str != 'string') return false;
+  return !isNaN(str) && !isNaN(parseFloat(str));
 }
 
 module.exports = {Poll};
