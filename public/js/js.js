@@ -92,3 +92,16 @@ form.addEventListener('submit', (event) => {
 });
 
 error.style.display = 'none';
+
+// Copy URL to clipboard
+const copyButton = document.querySelector('#copyUrl');
+const clipboardSuccess = document.querySelector('#clipboardSuccess');
+clipboardSuccess.style.display = 'none';
+copyButton.addEventListener('click', () => {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    clipboardSuccess.style.display = 'block';
+    setTimeout(() => {
+      clipboardSuccess.style.display = 'none';
+    }, 5000);
+  });
+});
