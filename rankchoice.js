@@ -24,7 +24,10 @@ class Poll {
       this.candidates = results;
     });
     await sql.loadVotes(this.pollId).then((results) => {
-      this.votes = results;
+      this.voters = [];
+      const voterIds = [...new Set(results.map((vote) => vote.voterId))];
+      voterIds.forEach((voterId) => this.voters.push(new Voter(voterId)));
+      console.log(this);
     });
     await sql.lookupVoter(sessionId, this.pollId).then((results) => {
       this.currentVoter = results;
@@ -33,6 +36,9 @@ class Poll {
       await sql.loadVotes(this.pollId, this.currentVoter.voterId).then((results) => {
         this.currentVoter.votes = results;
       });
+    }
+    if (this.voters.length > 0) {
+      this.calculateWinner();
     }
     return this;
   }
