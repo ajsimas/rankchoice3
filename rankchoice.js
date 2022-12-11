@@ -27,7 +27,10 @@ class Poll {
       this.voters = [];
       const voterIds = [...new Set(results.map((vote) => vote.voterId))];
       voterIds.forEach((voterId) => this.voters.push(new Voter(voterId)));
-      console.log(this);
+      results.forEach((result) => {
+        const currentVoter = this.voters.find((voter) => voter.id == result.voterId);
+        currentVoter.votes.push(new Vote(result));
+      });
     });
     await sql.lookupVoter(sessionId, this.pollId).then((results) => {
       this.currentVoter = results;
@@ -91,6 +94,16 @@ class Voter {
   }
   findNextEligibleVote() {
     for (const vote of this.votes) if (vote.eligible === true) return vote;
+  }
+}
+
+class Vote {
+  constructor(vote) {
+    this.candidateName = vote.candidateName;
+    this.candidateId = vote.candidateId;
+    this.voterId = vote.voterId;
+    this.rankChoice = vote.rankChoice;
+    this.eligible = true;
   }
 }
 
