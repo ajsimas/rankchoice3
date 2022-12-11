@@ -1,3 +1,4 @@
+/* eslint-disable guard-for-in */
 // import moduels
 const sql = require('./sql.js');
 
@@ -71,6 +72,19 @@ class Poll {
     // Check that ranks are consecutive
     for (let i = 0; i < ranksSubmitted.length; i++) if (ranksSubmitted[i] != i + 1) return false;
     return true;
+  }
+class Voter {
+  constructor(id) {
+    this.id = id;
+    this.votes = [];
+  }
+  sortVotes() {
+    this.votes.sort((a, b) => {
+      return a.rankchoice < b.rankchoice ? -1 : 1;
+    });
+  }
+  findNextEligibleVote() {
+    for (const vote of this.votes) if (vote.eligible === true) return vote;
   }
 }
 
