@@ -1,6 +1,15 @@
 <% layout('layouts/boilerplate') %>
-<div class="container my-3 ">
+<div class="container my-3" style="max-width: 700px;">
   <h1 class="text-center"><%= poll.name %> Results</h1>
   <h2 class="text-center">The winner is <%= poll.winnerName %></h2>
+  <% for (let i = 0; i < poll.rounds.length; i++) {%>
+    <div>
+      <h3>Round <%= i + 1 %></h3>
+      <% for (candidate in poll.rounds[i]) {%>
+        <div>
+          <%= poll.candidateIdToName(candidate) %>: <%= poll.rounds[i][candidate] %>
+        </div>
+      <% } %> 
+    </div>
+  <% } %> 
 </div>
-<%= JSON.stringify(poll) %>

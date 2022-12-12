@@ -147,9 +147,13 @@ class Poll {
     }
   }
 
+  candidateIdToName(id) {
+    return this.candidates.find((candidate) => candidate.id == id).name;
+  }
+
   returnWinnerName() {
     this.winnerId = this.returnWinnerId();
-    this.winnerName = this.candidates.find((candidate) => candidate.id == this.winnerId).name;
+    this.winnerName = this.candidateIdToName(this.winnerId);
     return this.winnerName;
   }
 }
