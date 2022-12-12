@@ -43,9 +43,9 @@ class Poll {
       });
     }
     if (this.voters.length > 0) {
-      this.calculateWinner();
+      this.calculateResults();
     }
-    console.log(this);
+    this.winnerName = this.returnWinnerName();
     return this;
   }
 
@@ -102,7 +102,6 @@ class Poll {
   }
 
   roundsComplete() {
-    console.log('test');
     if (this.rounds.length === 0) return false;
     const latestRound = this.latestRound();
     let totalVotes = 0;
@@ -127,17 +126,31 @@ class Poll {
     const results = {};
     for (const voter of this.voters) {
       const vote = voter.findNextEligibleVote();
-      console.log(vote);
       if (!results[vote.candidateId]) results[vote.candidateId] = 1;
       else results[vote.candidateId]++;
     }
     this.rounds.push(results);
   }
 
-  calculateWinner() {
+  calculateResults() {
     while (!this.roundsComplete()) {
       this.calculateRound();
     }
+  }
+
+  returnWinnerId() {
+    if (this.rounds.length > 0) {
+      const finalRound = this.rounds[this.rounds.length - 1];
+      return Object.keys(finalRound).reduce((a, b) => finalRound[a] > finalRound[b] ? a : b);
+    } else {
+      return undefined;
+    }
+  }
+
+  returnWinnerName() {
+    this.winnerId = this.returnWinnerId();
+    this.winnerName = this.candidates.find((candidate) => candidate.id == this.winnerId).name;
+    return this.winnerName;
   }
 }
 

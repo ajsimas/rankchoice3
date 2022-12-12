@@ -1,0 +1,6 @@
+<% layout('layouts/boilerplate') %>
+<div class="container my-3 ">
+  <h1 class="text-center"><%= poll.name %> Results</h1>
+  <h2 class="text-center">The winner is <%= poll.winnerName %></h2>
+</div>
+<%= JSON.stringify(poll) %>
