@@ -1,3 +1,4 @@
+/* eslint-disable guard-for-in */
 // import moduels
 const sql = require('./sql.js');
 
@@ -14,6 +15,7 @@ class Poll {
   }
 
   async load(webId = this.webId, sessionId) {
+    this.rounds = [];
     this.webId = webId;
     await sql.loadPoll(webId).then((results) => {
       this.pollId = results[0];
@@ -23,7 +25,14 @@ class Poll {
       this.candidates = results;
     });
     await sql.loadVotes(this.pollId).then((results) => {
-      this.votes = results;
+      this.voters = [];
+      const voterIds = [...new Set(results.map((vote) => vote.voterId))];
+      voterIds.forEach((voterId) => this.voters.push(new Voter(voterId)));
+      results.forEach((result) => {
+        const currentVoter = this.voters.find((voter) => voter.id == result.voterId);
+        currentVoter.votes.push(new Vote(result));
+      });
+      this.voters.forEach((voter) => voter.sortVotes());
     });
     await sql.lookupVoter(sessionId, this.pollId).then((results) => {
       this.currentVoter = results;
@@ -33,6 +42,10 @@ class Poll {
         this.currentVoter.votes = results;
       });
     }
+    if (this.voters.length > 0) {
+      this.calculateWinner();
+    }
+    console.log(this);
     return this;
   }
 
@@ -71,6 +84,85 @@ class Poll {
     // Check that ranks are consecutive
     for (let i = 0; i < ranksSubmitted.length; i++) if (ranksSubmitted[i] != i + 1) return false;
     return true;
+  }
+
+  eliminateCandidates() {
+    let ineligibleCandidate = '';
+    const latestRound = this.latestRound();
+    const minVoteCount = Math.min(...Object.values(latestRound));
+    for (const [candidateId, voteCount] of Object.entries(latestRound)) {
+      if (voteCount === minVoteCount) ineligibleCandidate = candidateId;
+    }
+    for (const voter of this.voters) {
+      const voterNextEligibleVote = voter.findNextEligibleVote();
+      if (voterNextEligibleVote.candidateId == ineligibleCandidate) {
+        voterNextEligibleVote.eligible = false;
+      }
+    }
+  }
+
+  roundsComplete() {
+    console.log('test');
+    if (this.rounds.length === 0) return false;
+    const latestRound = this.latestRound();
+    let totalVotes = 0;
+    let highestVoteCount = 0;
+    for (const candidate in latestRound) {
+      const voteCount = latestRound[candidate];
+      if (highestVoteCount < voteCount) highestVoteCount = voteCount;
+      totalVotes += voteCount;
+    }
+    if (highestVoteCount / totalVotes < 0.5) {
+      this.eliminateCandidates();
+      return false;
+    }
+    return true;
+  }
+
+  latestRound() {
+    return this.rounds[this.rounds.length - 1];
+  }
+
+  calculateRound() {
+    const results = {};
+    for (const voter of this.voters) {
+      const vote = voter.findNextEligibleVote();
+      console.log(vote);
+      if (!results[vote.candidateId]) results[vote.candidateId] = 1;
+      else results[vote.candidateId]++;
+    }
+    this.rounds.push(results);
+  }
+
+  calculateWinner() {
+    while (!this.roundsComplete()) {
+      this.calculateRound();
+    }
+  }
+}
+
+class Voter {
+  constructor(id) {
+    this.id = id;
+    this.votes = [];
+  }
+  sortVotes() {
+    this.votes.sort((a, b) => {
+      return a.rankChoice < b.rankChoice ? -1 : 1;
+    });
+  }
+  findNextEligibleVote() {
+    for (const vote of this.votes) if (vote.eligible === true) return vote;
+  }
+}
+
+class Vote {
+  constructor(vote) {
+    this.candidateName = vote.candidateName;
+    this.candidateId = vote.candidateId;
+    this.voterId = vote.voterId;
+    this.rankChoice = vote.rankChoice;
+    this.eligible = true;
   }
 }
 
