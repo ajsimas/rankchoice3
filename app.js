@@ -5,7 +5,7 @@ const {mySession} = require('./express-session');
 
 // initialize express
 const app = express();
-const router = require("./routes/index");
+const router = require('./routes/index');
 app.use(express.static('public'));
 app.use(express.urlencoded({extended: true}));
 app.use(mySession);
