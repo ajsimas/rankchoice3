@@ -38,5 +38,11 @@ app.post('/poll/:id/vote', async (req, res) => {
     }
   });
 });
+app.get('/poll/:id/results', async (req, res) => {
+  const poll = (new Poll).load(req.params.id, req.session.id);
+  poll.then((poll) => {
+    res.render('poll_results', {poll});
+  });
+});
 
 app.listen(8080);
