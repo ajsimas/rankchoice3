@@ -45,7 +45,7 @@ class Poll {
     if (this.voters.length > 0) {
       this.calculateResults();
     }
-    this.winnerName = this.returnWinnerName();
+    if (this.voters.length > 0) this.winnerName = this.returnWinnerName();
     return this;
   }
 
