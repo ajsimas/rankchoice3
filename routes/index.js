@@ -11,13 +11,14 @@ router.post('/poll/create', (req, res) => {
   const poll = (new Poll).create(req.body);
   poll.then((poll) => {
     const pollWebId = poll.webId;
+    req.flash('info', 'Poll created successfully');
     res.redirect(`/poll/${pollWebId}`);
   });
 });
 router.get('/poll/:id', (req, res) => {
   const poll = (new Poll).load(req.params.id, req.session.id);
   poll.then((poll) => {
-    res.render('poll', {poll});
+    res.render('poll', {poll, messages: req.flash('info')});
   });
 });
 router.post('/poll/:id/vote', async (req, res) => {

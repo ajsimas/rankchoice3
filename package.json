@@ -19,6 +19,7 @@
   "homepage": "https://github.com/ajsimas/rankchoice3#readme",
   "dependencies": {
     "bootstrap": "^5.2.3",
+    "connect-flash": "^0.1.1",
     "connect-session-sequelize": "^7.1.5",
     "ejs": "^3.1.8",
     "ejs-mate": "^4.0.0",
