@@ -1,0 +1,7 @@
+<% layout('layouts/boilerplate') %>
+<div class="container" style="max-width:1000px;">
+  <h1><%= post.title %> </h1>
+  <% for (paragraph of post.getParagraphs()) { %>
+    <p><%= paragraph %></p>
+  <% } %>
+</div>
