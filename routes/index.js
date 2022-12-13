@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const {Poll} = require('../rankchoice.js');
+const {Post} = require('../blog.js');
 
 // Express routes
 router.get('/', (req, res) => res.render('homepage'));
@@ -14,7 +15,6 @@ router.post('/poll/create', (req, res) => {
   });
 });
 router.get('/poll/:id', (req, res) => {
-  console.log(req.session)
   const poll = (new Poll).load(req.params.id, req.session.id);
   poll.then((poll) => {
     res.render('poll', {poll});
@@ -37,7 +37,10 @@ router.get('/poll/:id/results', async (req, res) => {
   });
 });
 router.get('/blog/:slug', (req, res) => {
-
+  const post = (new Post).load(req.params.slug);
+  post.then((post) => {
+    res.render('post', {post});
+  });
 });
 
 module.exports = router;

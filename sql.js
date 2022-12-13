@@ -180,6 +180,21 @@ function saveVoter(sessionId, pollId, name) {
   return promise;
 }
 
+function loadPost(slug) {
+  const promise = new Promise((resolve, reject) => {
+    const query = `SELECT * FROM post WHERE slug='${slug}'`;
+    const request = new Request(query, (err, rowCount, rows) => {
+      const result = {
+        title: rows[0][1].value,
+        body: rows[0][3].value,
+      };
+      resolve(result);
+    });
+    connection.execSql(request);
+  });
+  return promise;
+}
+
 const connection = new Connection(config);
 connection.on('connect', function(err) {
   if (err) console.log(err);
@@ -188,4 +203,5 @@ connection.on('connect', function(err) {
 
 connection.connect();
 
-module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote, loadVotes, lookupVoter};
+module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote, loadVotes, lookupVoter,
+  loadPost};
