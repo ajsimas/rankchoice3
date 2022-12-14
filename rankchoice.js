@@ -18,6 +18,7 @@ class Poll {
     this.rounds = [];
     this.webId = webId;
     await sql.loadPoll(webId).then((results) => {
+      if (results == undefined) return;
       this.pollId = results[0];
       this.name = results[1];
     });

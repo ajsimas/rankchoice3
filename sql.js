@@ -23,20 +23,26 @@ function createPoll(poll) {
     ('${poll.webId}','${poll.name.replace(/'/, '\'\'')}',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
   const promise = new Promise((resolve, reject) => {
     const request = new Request(query, (err, rowCount, rows) => {
-      const pollId = rows[0][0].value;
-      let query = 'INSERT INTO candidate (poll_id,option_num,name,date_created,date_modified) VALUES ';
-      candidateQuery = [];
-      optionNum = 1;
-      for (const key of Object.getOwnPropertyNames(poll.candidates)) {
-        candidateQuery.push(`(${pollId},${optionNum},'${poll.candidates[key].replace(/'/, '\'\'')}',
-        CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
-        optionNum++;
-      }
-      query += candidateQuery.join(',');
-      const request = new Request(query, (err, rowCount, rows) => {
+      if (err) {
+        console.log(err);
         resolve();
-      });
-      connection.execSql(request);
+      }
+      if (rows.length != 0) {
+        const pollId = rows[0][0].value;
+        let query = 'INSERT INTO candidate (poll_id,option_num,name,date_created,date_modified) VALUES ';
+        candidateQuery = [];
+        optionNum = 1;
+        for (const key of Object.getOwnPropertyNames(poll.candidates)) {
+          candidateQuery.push(`(${pollId},${optionNum},'${poll.candidates[key].replace(/'/, '\'\'')}',
+          CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
+          optionNum++;
+        }
+        query += candidateQuery.join(',');
+        const request = new Request(query, (err, rowCount, rows) => {
+          resolve();
+        });
+        connection.execSql(request);
+      } else resolve();
     });
     connection.execSql(request);
   });
@@ -49,11 +55,16 @@ function loadPoll(webId) {
   WHERE poll_web_id = '${webId}'`;
   const promise = new Promise((resolve, reject) => {
     const request = new Request(query, (err, rowCount, rows) => {
-      if (err) console.log(err);
-      const results = [];
-      results.push(rows[0][0].value);
-      results.push(rows[0][1].value);
-      resolve(results);
+      if (err) {
+        console.log(err);
+        resolve();
+      }
+      if (rows.length != 0) {
+        const results = [];
+        results.push(rows[0][0].value);
+        results.push(rows[0][1].value);
+        resolve(results);
+      } else resolve();
     });
     connection.execSql(request);
   });
@@ -116,9 +127,9 @@ async function recordVote(poll, body, sessionId) {
       SET rankchoice=${body[vote]},date_modified=CURRENT_TIMESTAMP
       WHERE candidate_id=${candidateId} AND voter_id=${voter.voterId}
       IF @@ROWCOUNT=0
-        INSERT INTO vote
-              (candidate_id,voter_id,rankchoice,date_created, date_modified)
-              VALUES (${candidateId},${voter.voterId},${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+      INSERT INTO vote
+      (candidate_id,voter_id,rankchoice,date_created, date_modified)
+      VALUES (${candidateId},${voter.voterId},${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
       await recordVoteSql(query);
     }
   }
