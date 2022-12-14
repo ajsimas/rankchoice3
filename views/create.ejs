@@ -4,28 +4,34 @@
   display: none;
 }
 </style>
-  <div class="container-md my-3">
-    <h1 class="text-center">Create Poll</h1>
-    <form class="mx-auto" action="/poll/create" method="POST" style="max-width: 500px;">
+<div class="container-md my-3">
+  <% if (messages != '') {%>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <%= messages %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% } %>
+  <h1 class="text-center">Create Poll</h1>
+  <form class="mx-auto" action="/poll/create" method="POST" style="max-width: 500px;">
+    <div class="mb-3">
+      <label for="name" class="form-label">Name</label>
+      <input type="text" id="name" name="name" class="form-control">
+    </div>
+    <div class="mb-3">
+      <label for="choiceCountInput" class="form-label">Number of choices</label>
+      <input type="number" id="choiceCountInput" name="choiceCountInput" class="form-control" value="2" min="2" max="10">
+    </div>
+    <div id="option-container">
       <div class="mb-3">
-        <label for="name" class="form-label">Name</label>
-        <input type="text" id="name" name="name" class="form-control">
+        <label for="option1" class="form-label">Option 1</label>
+        <input type="text" id="option1" name="option1" class="form-control">
       </div>
       <div class="mb-3">
-        <label for="choiceCountInput" class="form-label">Number of choices</label>
-        <input type="number" id="choiceCountInput" name="choiceCountInput" class="form-control" value="2" min="2" max="10">
+        <label for="option2" class="form-label">Option 2</label>
+        <input type="text" id="option2" name="option2" class="form-control">
       </div>
-      <div id="option-container">
-        <div class="mb-3">
-          <label for="option1" class="form-label">Option 1</label>
-          <input type="text" id="option1" name="option1" class="form-control">
-        </div>
-        <div class="mb-3">
-          <label for="option2" class="form-label">Option 2</label>
-          <input type="text" id="option2" name="option2" class="form-control">
-        </div>
-      </div>
-      <button class="btn btn-primary">Create</button>
-    </form>
-  </div>
-  <script src="/js/choiceCountUpdater.js">
+    </div>
+    <button class="btn btn-primary">Create</button>
+  </form>
+</div>
+<script src="/js/choiceCountUpdater.js"></script>
