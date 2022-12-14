@@ -32,20 +32,19 @@
           </div>
         <% } %>
       </div>
-        <div class="my-2">
-          <label class="form-label" for="name">Voter name: </label>
-          <input class="form-control ms-2" type="text" name="name" id="name"
-          <% if(poll.currentVoter != undefined){ %>
-            value="<%= poll.currentVoter.name %>"
-          <% } %>
-          style="display: inline; width: 300px;">
-        </div>
-        <div class="mx-auto text-center">
-          <button class="btn btn-primary">Vote</button>
-        </div>
+      <div class="my-2">
+        <label class="form-label" for="name">Voter name: </label>
+        <input class="form-control ms-2" type="text" name="name" id="name"
+        <% if(poll.currentVoter != undefined){ %>
+          value="<%= poll.currentVoter.name %>"
+        <% } %>
+        style="display: inline; width: 300px;">
+      </div>
+      <div class="mx-auto text-center">
+        <button class="btn btn-primary">Vote</button>
+      </div>
     </form>
   </div>
-  <div>
   <div>
     <button class="btn btn-secondary btn-sm" id="copyUrl">
       Copy poll link
@@ -53,7 +52,6 @@
     <div class="mt-1 fs-6 fw-light text-success" id="clipboardSuccess">
       Success
     </div>
-  </div>
   </div>
 </div>
 <br>
