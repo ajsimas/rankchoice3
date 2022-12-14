@@ -165,6 +165,16 @@ class Poll {
     this.winnerName = this.candidateIdToName(this.winnerId);
     return this.winnerName;
   }
+
+  orderCandidates(round) {
+    console.log(round);
+    round.order = Object.keys(round);
+    round.order.sort((a, b) => {
+      if (round[a] < round[b]) return 1;
+      else return -1;
+    });
+    return round;
+  }
 }
 
 class Voter {
