@@ -25,7 +25,7 @@ function createPoll(poll) {
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) {
         console.log(err);
-        resolve();
+        resolve(false);
       }
       if (rows.length != 0) {
         const pollId = rows[0][0].value;
@@ -39,10 +39,10 @@ function createPoll(poll) {
         }
         query += candidateQuery.join(',');
         const request = new Request(query, (err, rowCount, rows) => {
-          resolve();
+          resolve(true);
         });
         connection.execSql(request);
-      } else resolve();
+      } else resolve(false);
     });
     connection.execSql(request);
   });

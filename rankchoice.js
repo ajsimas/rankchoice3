@@ -10,7 +10,9 @@ class Poll {
     for (const [key, value] of Object.entries(body)) {
       if (key.match(/^option(?:\d|10)$/)) this.candidates[key] = value;
     }
-    await sql.createPoll(this);
+    await sql.createPoll(this).then((result) => {
+      this.pollCreatedSuccessfully = result;
+    });
     return this;
   }
 
