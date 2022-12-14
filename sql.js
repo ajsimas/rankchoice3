@@ -122,6 +122,7 @@ async function recordVote(poll, body, sessionId) {
     await saveVoter(sessionId, poll.pollId, body.name);
   for (const vote of Object.getOwnPropertyNames(body)) {
     if (isNumeric(vote)) {
+      if (body[vote] == 0) body[vote] = `''`;
       const candidateId = poll.candidates.filter((candidate) => candidate.optionNum == vote)[0].id;
       const query = `UPDATE vote
       SET rankchoice=${body[vote]},date_modified=CURRENT_TIMESTAMP

@@ -20,7 +20,8 @@
         <% for(let i=0; i < poll.candidates.length; i++) { %>
           <div class="my-2">
             <input class="form-control rankInput"
-            <% if (poll.currentVoter && poll.currentVoter.votes[i] !== undefined) { %>
+            <% if (poll.currentVoter && poll.currentVoter.votes[i] !== undefined &&
+                poll.currentVoter.votes[i].rankChoice != 0) { %>
               value="<%=  poll.currentVoter.votes[i].rankChoice %>"
             <% } %>
             name="<%=poll.candidates[i].optionNum%>" type="number" id="<%=poll.candidates[i].optionNum%>"

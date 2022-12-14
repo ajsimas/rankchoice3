@@ -61,8 +61,9 @@ class Poll {
 
   async recordVote(body, sessionId) {
     if (this.validateVote(body)) {
-      this.voteRecorded = true;
       await sql.recordVote(this, body, sessionId);
+      this.voteRecorded = true;
+      console.log(JSON.stringify(this));
     } else {
       this.voteRecorded = false;
     }
@@ -181,7 +182,9 @@ class Vote {
     this.candidateId = vote.candidateId;
     this.voterId = vote.voterId;
     this.rankChoice = vote.rankChoice;
-    this.eligible = true;
+    if (this.rankChoice != 0) {
+      this.eligible = true;
+    }
   }
 }
 
