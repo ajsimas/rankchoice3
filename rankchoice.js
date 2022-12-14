@@ -101,6 +101,9 @@ class Poll {
     for (const [candidateId, voteCount] of Object.entries(latestRound)) {
       if (voteCount === minVoteCount) ineligibleCandidate = candidateId;
     }
+    this.candidates.filter((candidate) => {
+      return candidate.id == ineligibleCandidate;
+    })[0].eligible = false;
     for (const voter of this.voters) {
       const voterNextEligibleVote = voter.findNextEligibleVote();
       if (voterNextEligibleVote.candidateId == ineligibleCandidate) {
@@ -132,6 +135,11 @@ class Poll {
 
   calculateRound() {
     const results = {};
+    for (const candidate of this.candidates) {
+      if (candidate.eligible == true) {
+        results[candidate.id] = 0;
+      }
+    }
     for (const voter of this.voters) {
       const vote = voter.findNextEligibleVote();
       if (vote == undefined) continue;
@@ -167,7 +175,6 @@ class Poll {
   }
 
   orderCandidates(round) {
-    console.log(round);
     round.order = Object.keys(round);
     round.order.sort((a, b) => {
       if (round[a] < round[b]) return 1;

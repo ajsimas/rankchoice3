@@ -84,6 +84,7 @@ function loadCandidates(pollId) {
         candidate.id = row[0].value;
         candidate.optionNum = row[1].value;
         candidate.name = row[2].value;
+        candidate.eligible = true;
         candidates.push(candidate);
       }
       resolve(candidates);
