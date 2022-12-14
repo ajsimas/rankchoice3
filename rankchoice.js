@@ -126,6 +126,7 @@ class Poll {
     const results = {};
     for (const voter of this.voters) {
       const vote = voter.findNextEligibleVote();
+      if (vote == undefined) continue;
       if (!results[vote.candidateId]) results[vote.candidateId] = 1;
       else results[vote.candidateId]++;
     }
