@@ -65,7 +65,6 @@ class Poll {
     if (this.validateVote(body)) {
       await sql.recordVote(this, body, sessionId);
       this.voteRecorded = true;
-      console.log(JSON.stringify(this));
     } else {
       this.voteRecorded = false;
     }
@@ -79,6 +78,11 @@ class Poll {
       if (isNumeric(optionNum) && body[optionNum] != '') ranksSubmitted.push(body[optionNum]);
     }
     ranksSubmitted.sort((a, b) => a - b);
+
+    // Check name
+    if (body.name == '') return false;
+
+    // Check rank choices
     // Check quantity of submitted votes is accurate
     if (reqCandidateCount !== this.candidates.length) return false;
     // Check ranks start at 1
