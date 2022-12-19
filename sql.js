@@ -208,17 +208,22 @@ function loadPost(slug) {
   return promise;
 }
 
+function hex2bin(hex) {
+  return Buffer.from(hex, 'hex');
+}
+
 function loginLocal(username) {
   const promise = new Promise((resolve, reject) => {
-    const query = `Select * FROM user WHERE username='${username}'`;
+    const query = `SELECT * FROM [rankchoice].[dbo].[user] \
+WHERE username='${username}'`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (rows.length == 0) {
         resolve(false);
       } else {
-        console.log(rows.length);
         const result = {
           username: rows[0][1].value,
-          hashedPassword: rows[0][1].value,
+          hashedPassword: hex2bin(rows[0][2].value),
+          salt: hex2bin(rows[0][3].value),
         };
         resolve(result);
       }
@@ -254,3 +259,5 @@ connection.on('connect', function(err) {
 
 connection.connect();
 
+module.exports = {connection, createPoll, loadPoll, loadCandidates,
+  recordVote, loadVotes, lookupVoter, loadPost, loginLocal, signupLocal};

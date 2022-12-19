@@ -1,19 +1,27 @@
 const express = require('express');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
-/* const crypto = require('crypto'); */
+const crypto = require('crypto');
 const sql = require('../sql.js');
 // eslint-disable-next-line new-cap
 const router = express.Router();
 
-temp = {
-  id: 1,
-  username: 'austin@simas.io',
-};
-
 passport.use(new LocalStrategy(function verify(username, password, cb) {
   sql.loginLocal(username).then((results) => {
-    return cb(null, temp);
+    console.log(results);
+    if (results == undefined) {
+      return cb(null, false, {message: 'Incorrect usernameor password.'});
+    }
+    crypto.pbkdf2(password, results.salt, 310000, 32, 'sha256',
+        (err, hashedPassword) => {
+          console.log(JSON.stringify(results.hashedPassword));
+          console.log(JSON.stringify(hashedPassword));
+          if (!crypto.timingSafeEqual(results.hashedPassword, hashedPassword)) {
+            return cb(null, false,
+                {message: 'Incorrect username or password.'});
+          }
+          return cb(null, results);
+        });
   });
 }));
 
