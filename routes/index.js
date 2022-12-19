@@ -5,7 +5,7 @@ const {Poll} = require('../rankchoice.js');
 const {Post} = require('../blog.js');
 
 // Express routes
-router.get('/', (req, res) => res.render('homepage'));
+router.get('/', (req, res) => res.render('homepage', {user: req.user}));
 router.get('/poll/create', (req, res) => res.render('create', {messages: req.flash('error')}));
 router.post('/poll/create', (req, res) => {
   const poll = (new Poll).create(req.body);

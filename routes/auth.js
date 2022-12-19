@@ -57,4 +57,21 @@ router.get('/signup', function(req, res, next) {
   res.render('signup');
 });
 
+router.post('/signup', (req, res) => {
+  const salt = crypto.randomBytes(16);
+  crypto.pbkdf2(req.body.password, salt, 310000, 32, 'sha256',
+      async (err, hashedPassword) => {
+        console.log(typeof hashedPassword);
+        console.log(JSON.stringify(hashedPassword));
+        console.log(hashedPassword);
+        if (err) return;
+        console.log(salt);
+        const user = await sql.signupLocal(req.body.username, hashedPassword,
+            salt);
+        req.login(user, () => {
+          res.redirect('/');
+        });
+      });
+});
+
 module.exports = router;
