@@ -208,6 +208,26 @@ function loadPost(slug) {
   return promise;
 }
 
+function loginLocal(username) {
+  const promise = new Promise((resolve, reject) => {
+    const query = `Select * FROM user WHERE username='${username}'`;
+    const request = new Request(query, (err, rowCount, rows) => {
+      if (rows.length == 0) {
+        resolve(false);
+      } else {
+        console.log(rows.length);
+        const result = {
+          username: rows[0][1].value,
+          hashedPassword: rows[0][1].value,
+        };
+        resolve(result);
+      }
+    });
+    connection.execSql(request);
+  });
+  return promise;
+}
+
 const connection = new Connection(config);
 connection.on('connect', function(err) {
   if (err) console.log(err);
@@ -217,4 +237,4 @@ connection.on('connect', function(err) {
 connection.connect();
 
 module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote, loadVotes, lookupVoter,
-  loadPost};
+  loadPost, loginLocal};
