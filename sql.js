@@ -228,6 +228,24 @@ function loginLocal(username) {
   return promise;
 }
 
+function signupLocal(username, password, salt) {
+  const promise = new Promise((resolve, reject) => {
+    console.log(JSON.stringify(password));
+    console.log(password.toString('hex'));
+    const query = `INSERT INTO [rankchoice].[dbo].[user] (username,
+    hashed_password, salt) OUTPUT Inserted.user_id
+    VALUES ('${username}','${password.toString('hex')}',\
+    '${salt.toString('hex')}')`;
+    console.log(query);
+    const request = new Request(query, (err, rowCount, rows) => {
+      resolve({id: rows[0][0].value,
+        username: username});
+    });
+    connection.execSql(request);
+  });
+  return promise;
+}
+
 const connection = new Connection(config);
 connection.on('connect', function(err) {
   if (err) console.log(err);
@@ -236,5 +254,3 @@ connection.on('connect', function(err) {
 
 connection.connect();
 
-module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote, loadVotes, lookupVoter,
-  loadPost, loginLocal};
