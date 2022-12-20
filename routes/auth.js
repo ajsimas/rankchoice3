@@ -8,14 +8,11 @@ const router = express.Router();
 
 passport.use(new LocalStrategy(function verify(username, password, cb) {
   sql.loginLocal(username).then((results) => {
-    console.log(results);
     if (results == undefined) {
       return cb(null, false, {message: 'Incorrect usernameor password.'});
     }
     crypto.pbkdf2(password, results.salt, 310000, 32, 'sha256',
         (err, hashedPassword) => {
-          console.log(JSON.stringify(results.hashedPassword));
-          console.log(JSON.stringify(hashedPassword));
           if (!crypto.timingSafeEqual(results.hashedPassword, hashedPassword)) {
             return cb(null, false,
                 {message: 'Incorrect username or password.'});
@@ -61,11 +58,7 @@ router.post('/signup', (req, res) => {
   const salt = crypto.randomBytes(16);
   crypto.pbkdf2(req.body.password, salt, 310000, 32, 'sha256',
       async (err, hashedPassword) => {
-        console.log(typeof hashedPassword);
-        console.log(JSON.stringify(hashedPassword));
-        console.log(hashedPassword);
         if (err) return;
-        console.log(salt);
         const user = await sql.signupLocal(req.body.username, hashedPassword,
             salt);
         req.login(user, () => {
