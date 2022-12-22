@@ -19,8 +19,10 @@ const config = {
 };
 
 function createPoll(poll) {
-  const query = `INSERT INTO poll (poll_web_id,name,date_created,date_modified) OUTPUT Inserted.poll_id VALUES
-    ('${poll.webId}','${poll.name.replace(/'/, '\'\'')}',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+  const query = `INSERT INTO poll (poll_web_id,name,date_created,date_modified)
+    OUTPUT Inserted.poll_id
+    VALUES ('${poll.webId}','${poll.name.replace(/'/, '\'\'')}',
+    CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
   const promise = new Promise((resolve, reject) => {
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) {
@@ -29,11 +31,13 @@ function createPoll(poll) {
       }
       if (rows.length != 0) {
         const pollId = rows[0][0].value;
-        let query = 'INSERT INTO candidate (poll_id,option_num,name,date_created,date_modified) VALUES ';
+        let query = `INSERT INTO candidate (poll_id,option_num,name,
+          date_created,date_modified) VALUES `;
         candidateQuery = [];
         optionNum = 1;
         for (const key of Object.getOwnPropertyNames(poll.candidates)) {
-          candidateQuery.push(`(${pollId},${optionNum},'${poll.candidates[key].replace(/'/, '\'\'')}',
+          candidateQuery.push(`(${pollId},${optionNum},\
+            '${poll.candidates[key].replace(/'/, '\'\'')}',
           CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
           optionNum++;
         }
@@ -96,7 +100,8 @@ function loadCandidates(pollId) {
 
 function loadVotes(pollId, voterId) {
   const promise = new Promise((resolve, reject) => {
-    let query = `SELECT candidate.name, vote.candidate_id, vote.voter_id, vote.rankchoice
+    let query = `SELECT candidate.name, vote.candidate_id, vote.voter_id,
+    vote.rankchoice
     FROM vote
     INNER JOIN candidate ON candidate.candidate_id=vote.candidate_id
     WHERE candidate.poll_id = '${pollId}'`;
@@ -124,14 +129,17 @@ async function recordVote(poll, body, sessionId) {
   for (const vote of Object.getOwnPropertyNames(body)) {
     if (isNumeric(vote)) {
       if (body[vote] == 0) body[vote] = `''`;
-      const candidateId = poll.candidates.filter((candidate) => candidate.optionNum == vote)[0].id;
+      const candidateId = poll.candidates.filter((candidate) => {
+        return candidate.optionNum == vote;
+      })[0].id;
       const query = `UPDATE vote
       SET rankchoice=${body[vote]},date_modified=CURRENT_TIMESTAMP
       WHERE candidate_id=${candidateId} AND voter_id=${voter.voterId}
       IF @@ROWCOUNT=0
       INSERT INTO vote
       (candidate_id,voter_id,rankchoice,date_created, date_modified)
-      VALUES (${candidateId},${voter.voterId},${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+      VALUES (${candidateId},${voter.voterId},${body[vote]},CURRENT_TIMESTAMP,\
+        CURRENT_TIMESTAMP)`;
       await recordVoteSql(query);
     }
   }
@@ -177,9 +185,11 @@ function lookupVoter(sessionId, pollId) {
 
 function saveVoter(sessionId, pollId, name) {
   const promise = new Promise((resolve, reject) => {
-    const query = `INSERT INTO voter (session_id,poll_id,name,date_created,date_modified)
+    const query = `INSERT INTO voter (session_id,poll_id,name,date_created,
+      date_modified)
       OUTPUT INSERTED.voter_id,INSERTED.session_id,INSERTED.name
-      VALUES ('${sessionId}',${pollId},'${name.replace(/'/, '\'\'')}',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+      VALUES ('${sessionId}',${pollId},'${name.replace(/'/, '\'\'')}',\
+        CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
       const voter = {};

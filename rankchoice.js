@@ -32,7 +32,9 @@ class Poll {
       const voterIds = [...new Set(results.map((vote) => vote.voterId))];
       voterIds.forEach((voterId) => this.voters.push(new Voter(voterId)));
       results.forEach((result) => {
-        const currentVoter = this.voters.find((voter) => voter.id == result.voterId);
+        const currentVoter = this.voters.find((voter) => {
+          return voter.id == result.voterId;
+        });
         currentVoter.votes.push(new Vote(result));
       });
       this.voters.forEach((voter) => voter.sortVotes());
@@ -41,9 +43,10 @@ class Poll {
       this.currentVoter = results;
     });
     if (this.currentVoter !== undefined) {
-      await sql.loadVotes(this.pollId, this.currentVoter.voterId).then((results) => {
-        this.currentVoter.votes = results;
-      });
+      await sql.loadVotes(this.pollId, this.currentVoter.voterId)
+          .then((results) => {
+            return this.currentVoter.votes = results;
+          });
     }
     if (this.voters.length > 0) {
       this.calculateResults();
@@ -75,7 +78,9 @@ class Poll {
     const reqCandidateCount = Object.keys(body).length - 1;
     const ranksSubmitted = [];
     for (const optionNum of Object.keys(body)) {
-      if (isNumeric(optionNum) && body[optionNum] != '') ranksSubmitted.push(body[optionNum]);
+      if (isNumeric(optionNum) && body[optionNum] != '') {
+        ranksSubmitted.push(body[optionNum]);
+      };
     }
     ranksSubmitted.sort((a, b) => a - b);
 
@@ -90,7 +95,9 @@ class Poll {
     // Check that all ranks are unique
     if (new Set(ranksSubmitted).size != ranksSubmitted.length) return false;
     // Check that ranks are consecutive
-    for (let i = 0; i < ranksSubmitted.length; i++) if (ranksSubmitted[i] != i + 1) return false;
+    for (let i = 0; i < ranksSubmitted.length; i++) {
+      if (ranksSubmitted[i] != i + 1) return false;
+    };
     return true;
   }
 
@@ -158,7 +165,8 @@ class Poll {
   returnWinnerId() {
     if (this.rounds.length > 0) {
       const finalRound = this.rounds[this.rounds.length - 1];
-      return Object.keys(finalRound).reduce((a, b) => finalRound[a] > finalRound[b] ? a : b);
+      return Object.keys(finalRound)
+          .reduce((a, b) => finalRound[a] > finalRound[b] ? a : b);
     } else {
       return undefined;
     }

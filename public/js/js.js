@@ -24,7 +24,9 @@ function valuesAreConsecutive() {
 function duplicatesExist() {
   const values = [];
   inputs.forEach((input) => values.push(input.value));
-  if (values.length !== values.filter((value, index, self) => self.indexOf(value) === index).length) {
+  if (values.length !== values.filter((value, index, self) => {
+    return self.indexOf(value) === index;
+  }).length) {
     return true;
   }
 }
@@ -82,10 +84,13 @@ form.addEventListener('submit', (event) => {
       errors.push('Rank selections must be consecutive. No skipping.');
     }
   }
-  if (voterName.value == '') errors.push('"Voter name" field cannot be left empty');
+  if (voterName.value == '') {
+    errors.push('"Voter name" field cannot be left empty');
+  }
   if (errors.length > 0) {
     error.style.color = 'red';
-    error.innerHTML = '<p class="mb-0">' + errors.join('</p><p class="mb-0">') + '</p>';
+    error.innerHTML = '<p class="mb-0">' + errors.join('</p><p class="mb-0">') +
+      '</p>';
     error.style.display = 'block';
   } else {
     form.submit();
