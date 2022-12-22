@@ -1,4 +1,5 @@
 const inputs = document.querySelectorAll('input[type="number');
+const voterName = document.querySelector('#name');
 const error = document.querySelector('#error');
 const form = document.querySelector('form');
 const map = new Map();
@@ -81,6 +82,7 @@ form.addEventListener('submit', (event) => {
       errors.push('Rank selections must be consecutive. No skipping.');
     }
   }
+  if (voterName.value == '') errors.push('"Voter name" field cannot be left empty');
   if (errors.length > 0) {
     error.style.color = 'red';
     error.innerHTML = '<p class="mb-0">' + errors.join('</p><p class="mb-0">') + '</p>';

@@ -5,7 +5,7 @@
   <% for (let i = 0; i < poll.rounds.length; i++) {%>
     <div>
       <h3>Round <%= i + 1 %></h3>
-      <% for (candidate in poll.rounds[i]) {%>
+      <% for (candidate of poll.orderCandidates(poll.rounds[i]).order) {%>
         <div>
           <%= poll.candidateIdToName(candidate) %>: <%= poll.rounds[i][candidate] %>
         </div>

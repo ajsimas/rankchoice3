@@ -5,14 +5,19 @@ const {Poll} = require('../rankchoice.js');
 const {Post} = require('../blog.js');
 
 // Express routes
-router.get('/', (req, res) => res.render('homepage'));
-router.get('/poll/create', (req, res) => res.render('create'));
+router.get('/', (req, res) => res.render('homepage', {user: req.user}));
+router.get('/poll/create', (req, res) => res.render('create', {messages: req.flash('error')}));
 router.post('/poll/create', (req, res) => {
   const poll = (new Poll).create(req.body);
   poll.then((poll) => {
-    const pollWebId = poll.webId;
-    req.flash('info', 'Poll created successfully');
-    res.redirect(`/poll/${pollWebId}`);
+    if (poll.pollCreatedSuccessfully) {
+      const pollWebId = poll.webId;
+      req.flash('info', 'Poll created successfully');
+      res.redirect(`/poll/${pollWebId}`);
+    } else {
+      req.flash('error', 'Poll was not created');
+      res.redirect(`/poll/create`);
+    }
   });
 });
 router.get('/poll/:id', (req, res) => {

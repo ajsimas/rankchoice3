@@ -10,7 +10,9 @@ class Poll {
     for (const [key, value] of Object.entries(body)) {
       if (key.match(/^option(?:\d|10)$/)) this.candidates[key] = value;
     }
-    await sql.createPoll(this);
+    await sql.createPoll(this).then((result) => {
+      this.pollCreatedSuccessfully = result;
+    });
     return this;
   }
 
@@ -18,6 +20,7 @@ class Poll {
     this.rounds = [];
     this.webId = webId;
     await sql.loadPoll(webId).then((results) => {
+      if (results == undefined) return;
       this.pollId = results[0];
       this.name = results[1];
     });
@@ -60,8 +63,8 @@ class Poll {
 
   async recordVote(body, sessionId) {
     if (this.validateVote(body)) {
-      this.voteRecorded = true;
       await sql.recordVote(this, body, sessionId);
+      this.voteRecorded = true;
     } else {
       this.voteRecorded = false;
     }
@@ -75,6 +78,11 @@ class Poll {
       if (isNumeric(optionNum) && body[optionNum] != '') ranksSubmitted.push(body[optionNum]);
     }
     ranksSubmitted.sort((a, b) => a - b);
+
+    // Check name
+    if (body.name == '') return false;
+
+    // Check rank choices
     // Check quantity of submitted votes is accurate
     if (reqCandidateCount !== this.candidates.length) return false;
     // Check ranks start at 1
@@ -93,6 +101,9 @@ class Poll {
     for (const [candidateId, voteCount] of Object.entries(latestRound)) {
       if (voteCount === minVoteCount) ineligibleCandidate = candidateId;
     }
+    this.candidates.filter((candidate) => {
+      return candidate.id == ineligibleCandidate;
+    })[0].eligible = false;
     for (const voter of this.voters) {
       const voterNextEligibleVote = voter.findNextEligibleVote();
       if (voterNextEligibleVote.candidateId == ineligibleCandidate) {
@@ -124,8 +135,14 @@ class Poll {
 
   calculateRound() {
     const results = {};
+    for (const candidate of this.candidates) {
+      if (candidate.eligible == true) {
+        results[candidate.id] = 0;
+      }
+    }
     for (const voter of this.voters) {
       const vote = voter.findNextEligibleVote();
+      if (vote == undefined) continue;
       if (!results[vote.candidateId]) results[vote.candidateId] = 1;
       else results[vote.candidateId]++;
     }
@@ -156,6 +173,15 @@ class Poll {
     this.winnerName = this.candidateIdToName(this.winnerId);
     return this.winnerName;
   }
+
+  orderCandidates(round) {
+    round.order = Object.keys(round);
+    round.order.sort((a, b) => {
+      if (round[a] < round[b]) return 1;
+      else return -1;
+    });
+    return round;
+  }
 }
 
 class Voter {
@@ -179,7 +205,9 @@ class Vote {
     this.candidateId = vote.candidateId;
     this.voterId = vote.voterId;
     this.rankChoice = vote.rankChoice;
-    this.eligible = true;
+    if (this.rankChoice != 0) {
+      this.eligible = true;
+    }
   }
 }
 

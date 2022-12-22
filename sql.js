@@ -23,20 +23,26 @@ function createPoll(poll) {
     ('${poll.webId}','${poll.name.replace(/'/, '\'\'')}',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
   const promise = new Promise((resolve, reject) => {
     const request = new Request(query, (err, rowCount, rows) => {
-      const pollId = rows[0][0].value;
-      let query = 'INSERT INTO candidate (poll_id,option_num,name,date_created,date_modified) VALUES ';
-      candidateQuery = [];
-      optionNum = 1;
-      for (const key of Object.getOwnPropertyNames(poll.candidates)) {
-        candidateQuery.push(`(${pollId},${optionNum},'${poll.candidates[key].replace(/'/, '\'\'')}',
-        CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
-        optionNum++;
+      if (err) {
+        console.log(err);
+        resolve(false);
       }
-      query += candidateQuery.join(',');
-      const request = new Request(query, (err, rowCount, rows) => {
-        resolve();
-      });
-      connection.execSql(request);
+      if (rows.length != 0) {
+        const pollId = rows[0][0].value;
+        let query = 'INSERT INTO candidate (poll_id,option_num,name,date_created,date_modified) VALUES ';
+        candidateQuery = [];
+        optionNum = 1;
+        for (const key of Object.getOwnPropertyNames(poll.candidates)) {
+          candidateQuery.push(`(${pollId},${optionNum},'${poll.candidates[key].replace(/'/, '\'\'')}',
+          CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
+          optionNum++;
+        }
+        query += candidateQuery.join(',');
+        const request = new Request(query, (err, rowCount, rows) => {
+          resolve(true);
+        });
+        connection.execSql(request);
+      } else resolve(false);
     });
     connection.execSql(request);
   });
@@ -49,11 +55,16 @@ function loadPoll(webId) {
   WHERE poll_web_id = '${webId}'`;
   const promise = new Promise((resolve, reject) => {
     const request = new Request(query, (err, rowCount, rows) => {
-      if (err) console.log(err);
-      const results = [];
-      results.push(rows[0][0].value);
-      results.push(rows[0][1].value);
-      resolve(results);
+      if (err) {
+        console.log(err);
+        resolve();
+      }
+      if (rows.length != 0) {
+        const results = [];
+        results.push(rows[0][0].value);
+        results.push(rows[0][1].value);
+        resolve(results);
+      } else resolve();
     });
     connection.execSql(request);
   });
@@ -73,6 +84,7 @@ function loadCandidates(pollId) {
         candidate.id = row[0].value;
         candidate.optionNum = row[1].value;
         candidate.name = row[2].value;
+        candidate.eligible = true;
         candidates.push(candidate);
       }
       resolve(candidates);
@@ -111,14 +123,15 @@ async function recordVote(poll, body, sessionId) {
     await saveVoter(sessionId, poll.pollId, body.name);
   for (const vote of Object.getOwnPropertyNames(body)) {
     if (isNumeric(vote)) {
+      if (body[vote] == 0) body[vote] = `''`;
       const candidateId = poll.candidates.filter((candidate) => candidate.optionNum == vote)[0].id;
       const query = `UPDATE vote
       SET rankchoice=${body[vote]},date_modified=CURRENT_TIMESTAMP
       WHERE candidate_id=${candidateId} AND voter_id=${voter.voterId}
       IF @@ROWCOUNT=0
-        INSERT INTO vote
-              (candidate_id,voter_id,rankchoice,date_created, date_modified)
-              VALUES (${candidateId},${voter.voterId},${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+      INSERT INTO vote
+      (candidate_id,voter_id,rankchoice,date_created, date_modified)
+      VALUES (${candidateId},${voter.voterId},${body[vote]},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
       await recordVoteSql(query);
     }
   }
@@ -195,6 +208,68 @@ function loadPost(slug) {
   return promise;
 }
 
+function hex2bin(hex) {
+  return Buffer.from(hex, 'hex');
+}
+
+function loginLocal(username) {
+  const promise = new Promise((resolve, reject) => {
+    const query = `SELECT * FROM [rankchoice].[dbo].[user] \
+WHERE username='${username}'`;
+    const request = new Request(query, (err, rowCount, rows) => {
+      if (rows.length == 0) {
+        resolve(false);
+      } else {
+        const result = {
+          username: rows[0][1].value,
+          hashedPassword: hex2bin(rows[0][2].value),
+          salt: hex2bin(rows[0][3].value),
+        };
+        resolve(result);
+      }
+    });
+    connection.execSql(request);
+  });
+  return promise;
+}
+
+function signupLocal(username, password, salt, accountId, verificationToken) {
+  const promise = new Promise((resolve, reject) => {
+    const query = `INSERT INTO [rankchoice].[dbo].[user] (username,
+    hashed_password, salt, account_id, verification_token, email_verified)
+    OUTPUT Inserted.user_id
+    VALUES ('${username}','${password.toString('hex')}',\
+    '${salt.toString('hex')}','${accountId}','${verificationToken}',0)`;
+    const request = new Request(query, (err, rowCount, rows) => {
+      resolve({id: rows[0][0].value,
+        username: username});
+    });
+    connection.execSql(request);
+  });
+  return promise;
+}
+
+function emailVerification(accountId, verificationToken) {
+  const promise = new Promise((resolve, reject) => {
+    const query = `UPDATE [rankchoice].[dbo].[user]
+    SET email_verified=1
+    WHERE account_id='${accountId}' AND
+    verification_token='${verificationToken}'`;
+    const request = new Request(query, (err, rowCount, rows) => {
+      const query = `SELECT user_id,username
+      FROM [rankchoice].[dbo].[user]
+      WHERE account_id='${accountId}' AND
+      verification_token='${verificationToken}'`;
+      const request = new Request(query, (err, rowCount, rows) => {
+        resolve({id: rows[0][0].value, username: rows[0][1].value});
+      });
+      connection.execSql(request);
+    });
+    connection.execSql(request);
+  });
+  return promise;
+}
+
 const connection = new Connection(config);
 connection.on('connect', function(err) {
   if (err) console.log(err);
@@ -203,5 +278,6 @@ connection.on('connect', function(err) {
 
 connection.connect();
 
-module.exports = {connection, createPoll, loadPoll, loadCandidates, recordVote, loadVotes, lookupVoter,
-  loadPost};
+module.exports = {connection, createPoll, loadPoll, loadCandidates,
+  recordVote, loadVotes, lookupVoter, loadPost, loginLocal, signupLocal,
+  emailVerification};
