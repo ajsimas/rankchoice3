@@ -82,4 +82,12 @@ router.post('/signup', (req, res) => {
       });
 });
 
+router.get('/user/:accountId/verify/:verificationToken', async (req, res) => {
+  const accountId = req.params.accountId;
+  const verificationToken = req.params.verificationToken;
+  const user = await sql.emailVerification(accountId, verificationToken);
+  console.log(user);
+  req.login(user, () => res.redirect('/'));
+});
+
 module.exports = router;

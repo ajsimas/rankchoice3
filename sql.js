@@ -239,10 +239,31 @@ function signupLocal(username, password, salt, accountId, verificationToken) {
     hashed_password, salt, account_id, verification_token, email_verified)
     OUTPUT Inserted.user_id
     VALUES ('${username}','${password.toString('hex')}',\
-    '${salt.toString('hex')}','${accountId}','${verificationToken}',1)`;
+    '${salt.toString('hex')}','${accountId}','${verificationToken}',0)`;
     const request = new Request(query, (err, rowCount, rows) => {
       resolve({id: rows[0][0].value,
         username: username});
+    });
+    connection.execSql(request);
+  });
+  return promise;
+}
+
+function emailVerification(accountId, verificationToken) {
+  const promise = new Promise((resolve, reject) => {
+    const query = `UPDATE [rankchoice].[dbo].[user]
+    SET email_verified=1
+    WHERE account_id='${accountId}' AND
+    verification_token='${verificationToken}'`;
+    const request = new Request(query, (err, rowCount, rows) => {
+      const query = `SELECT user_id,username
+      FROM [rankchoice].[dbo].[user]
+      WHERE account_id='${accountId}' AND
+      verification_token='${verificationToken}'`;
+      const request = new Request(query, (err, rowCount, rows) => {
+        resolve({id: rows[0][0].value, username: rows[0][1].value});
+      });
+      connection.execSql(request);
     });
     connection.execSql(request);
   });
@@ -258,4 +279,5 @@ connection.on('connect', function(err) {
 connection.connect();
 
 module.exports = {connection, createPoll, loadPoll, loadCandidates,
-  recordVote, loadVotes, lookupVoter, loadPost, loginLocal, signupLocal};
+  recordVote, loadVotes, lookupVoter, loadPost, loginLocal, signupLocal,
+  emailVerification};
