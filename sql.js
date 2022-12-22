@@ -233,12 +233,13 @@ WHERE username='${username}'`;
   return promise;
 }
 
-function signupLocal(username, password, salt) {
+function signupLocal(username, password, salt, accountId, verificationToken) {
   const promise = new Promise((resolve, reject) => {
     const query = `INSERT INTO [rankchoice].[dbo].[user] (username,
-    hashed_password, salt) OUTPUT Inserted.user_id
+    hashed_password, salt, account_id, verification_token, email_verified)
+    OUTPUT Inserted.user_id
     VALUES ('${username}','${password.toString('hex')}',\
-    '${salt.toString('hex')}')`;
+    '${salt.toString('hex')}','${accountId}','${verificationToken}',1)`;
     const request = new Request(query, (err, rowCount, rows) => {
       resolve({id: rows[0][0].value,
         username: username});

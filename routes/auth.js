@@ -3,6 +3,7 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const crypto = require('crypto');
 const sql = require('../sql.js');
+const sendEmail = require('../send-email.js');
 // eslint-disable-next-line new-cap
 const router = express.Router();
 
@@ -55,13 +56,26 @@ router.get('/signup', function(req, res, next) {
   res.render('signup');
 });
 
+function generateId() {
+  const characters = 'abcdefghjklmnpqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let id = '';
+  for (let i = 0; i < 32; i++) {
+    id += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return id;
+}
+
 router.post('/signup', (req, res) => {
   const salt = crypto.randomBytes(16);
   crypto.pbkdf2(req.body.password, salt, 310000, 32, 'sha256',
       async (err, hashedPassword) => {
         if (err) return;
+        const accountId = generateId();
+        const verificationToken = generateId();
         const user = await sql.signupLocal(req.body.username, hashedPassword,
-            salt);
+            salt, accountId, verificationToken);
+        sendEmail.emailVerification(user.username, accountId,
+            verificationToken);
         req.login(user, () => {
           res.redirect('/');
         });
