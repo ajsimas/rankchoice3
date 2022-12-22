@@ -8,8 +8,8 @@ const router = express.Router();
 
 passport.use(new LocalStrategy(function verify(username, password, cb) {
   sql.loginLocal(username).then((results) => {
-    if (results == undefined) {
-      return cb(null, false, {message: 'Incorrect usernameor password.'});
+    if (results == false) {
+      return cb(null, false, {message: 'Incorrect username or password.'});
     }
     crypto.pbkdf2(password, results.salt, 310000, 32, 'sha256',
         (err, hashedPassword) => {
@@ -35,11 +35,12 @@ passport.deserializeUser(function(user, cb) {
 });
 
 router.get('/login', (req, res) => {
-  res.render('login');
+  res.render('login', {messages: req.session.messages});
 });
 
 router.post('/login/password', passport.authenticate('local', {
   successRedirect: '/',
+  failureMessage: true,
   failureRedirect: '/login',
 }));
 
