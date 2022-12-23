@@ -1,5 +1,6 @@
 const Connection = require('tedious').Connection;
 const Request = require('tedious').Request;
+const TYPES = require('tedious').TYPES;
 
 // initialize tedious
 const config = {
@@ -19,45 +20,53 @@ const config = {
 };
 
 function createPoll(poll) {
-  const query = `INSERT INTO poll (poll_web_id,name,date_created,date_modified)
-    OUTPUT Inserted.poll_id
-    VALUES ('${poll.webId}','${poll.name.replace(/'/, '\'\'')}',
-    CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
-  const promise = new Promise((resolve, reject) => {
-    const request = new Request(query, (err, rowCount, rows) => {
+  const promise = new Promise(async (resolve, reject) => {
+    const query = `INSERT INTO poll (poll_web_id,name,date_created,\
+date_modified)
+OUTPUT Inserted.poll_id
+VALUES (@poll_web_id,@name,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+    const request = new Request(query, async (err, rowCount, rows) => {
       if (err) {
         console.log(err);
         resolve(false);
       }
-      if (rows.length != 0) {
-        const pollId = rows[0][0].value;
-        let query = `INSERT INTO candidate (poll_id,option_num,name,
-          date_created,date_modified) VALUES `;
-        candidateQuery = [];
-        optionNum = 1;
-        for (const key of Object.getOwnPropertyNames(poll.candidates)) {
-          candidateQuery.push(`(${pollId},${optionNum},\
-            '${poll.candidates[key].replace(/'/, '\'\'')}',
-          CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`);
-          optionNum++;
-        }
-        query += candidateQuery.join(',');
-        const request = new Request(query, (err, rowCount, rows) => {
-          resolve(true);
-        });
-        connection.execSql(request);
-      } else resolve(false);
+      if (rows.length == 0) resolve(false);
+      const pollId = rows[0][0].value;
+      optionNum = 1;
+      for (const key of Object.getOwnPropertyNames(poll.candidates)) {
+        await createCandidates(pollId, optionNum, poll.candidates[key]);
+        optionNum++;
+      }
+      resolve(true);
     });
+    request.addParameter('poll_web_id', TYPES.VarChar, poll.webId);
+    request.addParameter('name', TYPES.VarChar, poll.name);
+    connection.execSql(request);
+  });
+  return promise;
+}
+
+function createCandidates(pollId, optionNum, name) {
+  const promise = new Promise((resolve, reject) => {
+    const query = `INSERT INTO candidate (poll_id,option_num,name,
+date_created,date_modified) VALUES (@pollId,@optionNum,@name,CURRENT_TIMESTAMP,\
+CURRENT_TIMESTAMP)`;
+    const request = new Request(query, (err, rowCount, rows) => {
+      resolve(true);
+    });
+    request.addParameter('pollId', TYPES.Int, pollId);
+    request.addParameter('optionNum', TYPES.Int, optionNum);
+    request.addParameter('name', TYPES.VarChar, name);
     connection.execSql(request);
   });
   return promise;
 }
 
 function loadPoll(webId) {
-  const query = `SELECT poll_id,name
-  FROM poll
-  WHERE poll_web_id = '${webId}'`;
   const promise = new Promise((resolve, reject) => {
+    const query = `SELECT poll_id,name
+FROM poll
+WHERE poll_web_id=@webId`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) {
         console.log(err);
@@ -70,17 +79,17 @@ function loadPoll(webId) {
         resolve(results);
       } else resolve();
     });
+    request.addParameter('webId', TYPES.VarChar, webId);
     connection.execSql(request);
   });
   return promise;
 }
 
 function loadCandidates(pollId) {
-  const query = `SELECT candidate_id,option_num,name
-  FROM candidate
-  WHERE poll_id = ${pollId}
-  ORDER BY option_num ASC`;
   const promise = new Promise((resolve, reject) => {
+    const query = `SELECT candidate_id,option_num,name FROM candidate
+WHERE poll_id = @pollId
+ORDER BY option_num ASC`;
     const request = new Request(query, (err, rowCount, rows) => {
       const candidates = [];
       for (const row of rows) {
@@ -93,6 +102,7 @@ function loadCandidates(pollId) {
       }
       resolve(candidates);
     });
+    request.addParameter('pollId', TYPES.VarChar, pollId);
     connection.execSql(request);
   });
   return promise;
@@ -100,11 +110,10 @@ function loadCandidates(pollId) {
 
 function loadVotes(pollId, voterId) {
   const promise = new Promise((resolve, reject) => {
-    let query = `SELECT candidate.name, vote.candidate_id, vote.voter_id,
-    vote.rankchoice
-    FROM vote
-    INNER JOIN candidate ON candidate.candidate_id=vote.candidate_id
-    WHERE candidate.poll_id = '${pollId}'`;
+    let query = `SELECT candidate.name, vote.candidate_id, vote.voter_id,\
+vote.rankchoice FROM vote
+INNER JOIN candidate ON candidate.candidate_id=vote.candidate_id
+WHERE candidate.poll_id = @pollId`;
     if (voterId !== undefined) query += ` AND vote.voter_id = '${voterId}'`;
     const request = new Request(query, (err, rowCount, rows) => {
       const votes = [];
@@ -118,6 +127,7 @@ function loadVotes(pollId, voterId) {
       }
       resolve(votes);
     });
+    request.addParameter('pollId', TYPES.VarChar, pollId);
     connection.execSql(request);
   });
   return promise;
@@ -132,26 +142,29 @@ async function recordVote(poll, body, sessionId) {
       const candidateId = poll.candidates.filter((candidate) => {
         return candidate.optionNum == vote;
       })[0].id;
-      const query = `UPDATE vote
-      SET rankchoice=${body[vote]},date_modified=CURRENT_TIMESTAMP
-      WHERE candidate_id=${candidateId} AND voter_id=${voter.voterId}
-      IF @@ROWCOUNT=0
-      INSERT INTO vote
-      (candidate_id,voter_id,rankchoice,date_created, date_modified)
-      VALUES (${candidateId},${voter.voterId},${body[vote]},CURRENT_TIMESTAMP,\
-        CURRENT_TIMESTAMP)`;
-      await recordVoteSql(query);
+      await recordVoteSql([body[vote], candidateId, voter.voterId]);
     }
   }
   return;
 }
 
-function recordVoteSql(query) {
+function recordVoteSql(vote) {
   const promise = new Promise((resolve, reject) => {
+    const query = `UPDATE vote
+SET rankchoice=@rankChoice,date_modified=CURRENT_TIMESTAMP
+WHERE candidate_id=@candidateId AND voter_id=@voterId
+IF @@ROWCOUNT=0
+INSERT INTO vote
+(candidate_id,voter_id,rankchoice,date_created, date_modified)
+VALUES (@candidateId,@voterId,@rankChoice,CURRENT_TIMESTAMP,\
+CURRENT_TIMESTAMP)`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
       resolve();
     });
+    request.addParameter('rankChoice', TYPES.Int, vote[0]);
+    request.addParameter('candidateId', TYPES.Int, vote[1]);
+    request.addParameter('voterId', TYPES.Int, vote[2]);
     connection.execSql(request);
   });
   return promise;
@@ -165,8 +178,8 @@ function isNumeric(str) {
 function lookupVoter(sessionId, pollId) {
   const promise = new Promise((resolve, reject) => {
     const query = `SELECT TOP (1) voter_id,session_id,name
-      FROM voter
-      WHERE session_id='${sessionId}' AND poll_id='${pollId}'`;
+FROM voter
+WHERE session_id=@sessionId AND poll_id=@pollId`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
       if (rows.length !== 0) {
@@ -178,6 +191,8 @@ function lookupVoter(sessionId, pollId) {
       }
       resolve();
     });
+    request.addParameter('sessionId', TYPES.VarChar, sessionId);
+    request.addParameter('pollId', TYPES.NChar, pollId);
     connection.execSql(request);
   });
   return promise;
@@ -185,11 +200,11 @@ function lookupVoter(sessionId, pollId) {
 
 function saveVoter(sessionId, pollId, name) {
   const promise = new Promise((resolve, reject) => {
-    const query = `INSERT INTO voter (session_id,poll_id,name,date_created,
-      date_modified)
-      OUTPUT INSERTED.voter_id,INSERTED.session_id,INSERTED.name
-      VALUES ('${sessionId}',${pollId},'${name.replace(/'/, '\'\'')}',\
-        CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+    const query = `INSERT INTO voter (session_id,poll_id,name,date_created,\
+date_modified)
+OUTPUT INSERTED.voter_id,INSERTED.session_id,INSERTED.name
+VALUES (@sessionId,@pollId,@name,\
+CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
       const voter = {};
@@ -198,6 +213,9 @@ function saveVoter(sessionId, pollId, name) {
       voter.name = rows[0][2].value;
       resolve(voter);
     });
+    request.addParameter('sessionId', TYPES.VarChar, sessionId);
+    request.addParameter('pollId', TYPES.VarChar, pollId);
+    request.addParameter('name', TYPES.VarChar, name);
     connection.execSql(request);
   });
   return promise;
@@ -205,7 +223,7 @@ function saveVoter(sessionId, pollId, name) {
 
 function loadPost(slug) {
   const promise = new Promise((resolve, reject) => {
-    const query = `SELECT * FROM post WHERE slug='${slug}'`;
+    const query = `SELECT * FROM post WHERE slug=@slug`;
     const request = new Request(query, (err, rowCount, rows) => {
       const result = {
         title: rows[0][1].value,
@@ -213,6 +231,7 @@ function loadPost(slug) {
       };
       resolve(result);
     });
+    request.addParameter('slug', TYPES.VarChar, slug);
     connection.execSql(request);
   });
   return promise;
@@ -225,7 +244,7 @@ function hex2bin(hex) {
 function loginLocal(username) {
   const promise = new Promise((resolve, reject) => {
     const query = `SELECT * FROM [rankchoice].[dbo].[user] \
-WHERE username='${username}'`;
+WHERE username=@username`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (rows.length == 0) {
         resolve(false);
@@ -238,6 +257,7 @@ WHERE username='${username}'`;
         resolve(result);
       }
     });
+    request.addParameter('username', TYPES.VarChar, username);
     connection.execSql(request);
   });
   return promise;
@@ -245,15 +265,19 @@ WHERE username='${username}'`;
 
 function signupLocal(username, password, salt, accountId, verificationToken) {
   const promise = new Promise((resolve, reject) => {
-    const query = `INSERT INTO [rankchoice].[dbo].[user] (username,
-    hashed_password, salt, account_id, verification_token, email_verified)
-    OUTPUT Inserted.user_id
-    VALUES ('${username}','${password.toString('hex')}',\
-    '${salt.toString('hex')}','${accountId}','${verificationToken}',0)`;
+    const query = `INSERT INTO [rankchoice].[dbo].[user] (username,\
+hashed_password, salt, account_id, verification_token, email_verified)
+OUTPUT Inserted.user_id
+VALUES (@username,@password,@salt,@accountId,@verificationToken,0)`;
     const request = new Request(query, (err, rowCount, rows) => {
       resolve({id: rows[0][0].value,
         username: username});
     });
+    request.addParameter('username', TYPES.VarChar, username);
+    request.addParameter('password', TYPES.VarChar, password.toString('hex'));
+    request.addParameter('salt', TYPES.VarChar, salt.toString('hex'));
+    request.addParameter('accountId', TYPES.VarChar, accountId);
+    request.addParameter('verificationToken', TYPES.VarChar, verificationToken);
     connection.execSql(request);
   });
   return promise;
@@ -262,19 +286,23 @@ function signupLocal(username, password, salt, accountId, verificationToken) {
 function emailVerification(accountId, verificationToken) {
   const promise = new Promise((resolve, reject) => {
     const query = `UPDATE [rankchoice].[dbo].[user]
-    SET email_verified=1
-    WHERE account_id='${accountId}' AND
-    verification_token='${verificationToken}'`;
+SET email_verified=1
+WHERE account_id=@accountId AND verification_token=@verificationToken`;
     const request = new Request(query, (err, rowCount, rows) => {
       const query = `SELECT user_id,username
       FROM [rankchoice].[dbo].[user]
-      WHERE account_id='${accountId}' AND
-      verification_token='${verificationToken}'`;
+      WHERE account_id=@accountId AND
+      verification_token=@verificationToken`;
       const request = new Request(query, (err, rowCount, rows) => {
         resolve({id: rows[0][0].value, username: rows[0][1].value});
       });
+      request.addParameter('accountId', TYPES.VarChar, accountId);
+      request.addParameter('verificationToken', TYPES.VarChar,
+          verificationToken);
       connection.execSql(request);
     });
+    request.addParameter('accountId', TYPES.VarChar, accountId);
+    request.addParameter('verificationToken', TYPES.VarChar, verificationToken);
     connection.execSql(request);
   });
   return promise;
