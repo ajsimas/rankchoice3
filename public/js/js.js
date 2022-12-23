@@ -22,8 +22,9 @@ function valuesAreConsecutive() {
 }
 
 function duplicatesExist() {
-  const values = [];
+  let values = [];
   inputs.forEach((input) => values.push(input.value));
+  values = values.filter((value) => value != '');
   if (values.length !== values.filter((value, index, self) => {
     return self.indexOf(value) === index;
   }).length) {
