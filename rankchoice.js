@@ -112,7 +112,7 @@ class Poll {
       return candidate.id == ineligibleCandidate;
     })[0].eligible = false;
     for (const voter of this.voters) {
-      const voterNextEligibleVote = voter.findNextEligibleVote();
+      const voterNextEligibleVote = voter.findNextEligibleVote(this);
       if (voterNextEligibleVote.candidateId == ineligibleCandidate) {
         voterNextEligibleVote.eligible = false;
       }
@@ -148,7 +148,7 @@ class Poll {
       }
     }
     for (const voter of this.voters) {
-      const vote = voter.findNextEligibleVote();
+      const vote = voter.findNextEligibleVote(this);
       if (vote == undefined) continue;
       if (!results[vote.candidateId]) results[vote.candidateId] = 1;
       else results[vote.candidateId]++;
@@ -202,8 +202,19 @@ class Voter {
       return a.rankChoice < b.rankChoice ? -1 : 1;
     });
   }
-  findNextEligibleVote() {
-    for (const vote of this.votes) if (vote.eligible === true) return vote;
+  findNextEligibleVote(poll) {
+    for (const vote of this.votes) {
+      const pollCandidateEligibility = poll.candidates.filter((candidate) => {
+        return candidate.id == vote.candidateId;
+      })[0].eligible;
+      if (pollCandidateEligibility == false) {
+        vote.eligible = false;
+        continue;
+      }
+      console.log(pollCandidateEligibility);
+      console.log(vote);
+      return vote;
+    }
   }
 }
 

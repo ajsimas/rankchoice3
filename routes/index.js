@@ -41,6 +41,7 @@ router.post('/poll/:id/vote', async (req, res) => {
 router.get('/poll/:id/results', async (req, res) => {
   const poll = (new Poll).load(req.params.id, req.session.id);
   poll.then((poll) => {
+    console.log(JSON.stringify(poll));
     res.render('poll_results', {poll});
   });
 });
