@@ -142,10 +142,11 @@ async function recordVote(poll, body, sessionId) {
       const candidateId = poll.candidates.filter((candidate) => {
         return candidate.optionNum == vote;
       })[0].id;
-      await recordVoteSql([body[vote], candidateId, voter.voterId]);
+      if (await recordVoteSql([body[vote], candidateId, voter.voterId]) ==
+        false) return false;
     }
   }
-  return;
+  return true;
 }
 
 function recordVoteSql(vote) {
@@ -160,7 +161,7 @@ VALUES (@candidateId,@voterId,@rankChoice,CURRENT_TIMESTAMP,\
 CURRENT_TIMESTAMP)`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
-      resolve();
+      resolve(true);
     });
     request.addParameter('rankChoice', TYPES.Int, vote[0]);
     request.addParameter('candidateId', TYPES.Int, vote[1]);

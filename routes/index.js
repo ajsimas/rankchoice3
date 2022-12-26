@@ -25,17 +25,20 @@ router.post('/poll/create', (req, res) => {
 router.get('/poll/:id', (req, res) => {
   const poll = (new Poll).load(req.params.id, req.session.id);
   poll.then((poll) => {
-    res.render('poll', {poll, messages: req.flash('info')});
+    res.render('poll', {poll, info: req.flash('info'),
+      error: req.flash('error')});
   });
 });
 router.post('/poll/:id/vote', async (req, res) => {
+  console.log(req.body);
   const poll = await (new Poll).load(req.params.id, req.session.id);
   poll.recordVote(req.body, req.session.id).then(() => {
     if (poll.voteRecorded) {
-      res.redirect(`/poll/${poll.webId}`);
+      req.flash('info', 'Vote records successfully');
     } else {
-      // TODO respond 'your vote was not recorded'
+      req.flash('error', 'Vote not recorded');
     }
+    res.redirect(`/poll/${poll.webId}`);
   });
 });
 router.get('/poll/:id/results', async (req, res) => {

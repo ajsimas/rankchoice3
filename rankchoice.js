@@ -66,12 +66,11 @@ class Poll {
 
   async recordVote(body, sessionId) {
     if (this.validateVote(body)) {
-      await sql.recordVote(this, body, sessionId);
-      this.voteRecorded = true;
+      this.voteRecorded = await sql.recordVote(this, body, sessionId);
     } else {
       this.voteRecorded = false;
     }
-    return;
+    return this.voteRecorded;
   }
 
   validateVote(body) {
@@ -211,8 +210,6 @@ class Voter {
         vote.eligible = false;
         continue;
       }
-      console.log(pollCandidateEligibility);
-      console.log(vote);
       return vote;
     }
   }
