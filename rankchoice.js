@@ -86,6 +86,9 @@ class Poll {
     // Check name
     if (body.name == '') return false;
 
+    // Check name length
+    if (body.name.length > 32) return false;
+
     // Check rank choices
     // Check quantity of submitted votes is accurate
     if (reqCandidateCount !== this.candidates.length) return false;
