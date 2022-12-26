@@ -30,7 +30,6 @@ router.get('/poll/:id', (req, res) => {
   });
 });
 router.post('/poll/:id/vote', async (req, res) => {
-  console.log(req.body);
   const poll = await (new Poll).load(req.params.id, req.session.id);
   poll.recordVote(req.body, req.session.id).then(() => {
     if (poll.voteRecorded) {
