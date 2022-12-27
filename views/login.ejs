@@ -97,6 +97,12 @@
 
 <body class="text-center">
   <main class="form-signin w-100 m-auto">
+    <% if (error != '') {%>
+      <div class="alert alert-error alert-dismissible fade show" role="alert">
+        <%= error %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <% } %> 
     <form action="/login/password" method="post">
       <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
       <div class="form-floating">

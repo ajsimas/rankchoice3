@@ -302,6 +302,28 @@ GETUTCDATE(), DATEADD(MINUTE,480,GETUTCDATE()))`;
   return promise;
 }
 
+function checkLinkValidity(accountId, verificationToken) {
+  const promise = new Promise((resolve, reject) => {
+    const query = `SELECT email_link.date_expiration
+FROM [rankchoice].[dbo].[user]
+JOIN email_link
+ON [rankchoice].[dbo].[user].user_id = email_link.user_id
+WHERE [rankchoice].[dbo].[user].account_id=@accountId AND \
+email_link.verification_token=@verificationToken`;
+    const request = new Request(query, (err, rowCount, rows) => {
+      if (rows.length != 1) return resolve(false);
+      const expirationDateTime = rows[0][0].value;
+      const currentDateTime = new Date(new Date().toUTCString());
+      if (currentDateTime > expirationDateTime) return resolve(false);
+      return resolve(true);
+    });
+    request.addParameter('accountId', TYPES.VarChar, accountId);
+    request.addParameter('verificationToken', TYPES.VarChar, verificationToken);
+    connection.execSql(request);
+  });
+  return promise;
+}
+
 function emailVerification(accountId, verificationToken) {
   const promise = new Promise((resolve, reject) => {
     const query = `UPDATE [rankchoice].[dbo].[user]
@@ -354,4 +376,4 @@ connection.connect();
 
 module.exports = {connection, createPoll, loadPoll, loadCandidates,
   recordVote, loadVotes, lookupVoter, loadPost, loginLocal, signupLocal,
-  emailVerification, accountExists};
+  emailVerification, accountExists, checkLinkValidity};

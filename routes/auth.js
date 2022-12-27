@@ -36,7 +36,8 @@ passport.deserializeUser(function(user, cb) {
 });
 
 router.get('/login', (req, res) => {
-  res.render('login', {messages: req.session.messages});
+  res.render('login', {messages: req.session.messages,
+    error: req.flash('error')});
 });
 
 router.post('/login/password', passport.authenticate('local', {
@@ -91,8 +92,15 @@ instructions`);
 router.get('/user/:accountId/verify/:verificationToken', async (req, res) => {
   const accountId = req.params.accountId;
   const verificationToken = req.params.verificationToken;
-  const user = await sql.emailVerification(accountId, verificationToken);
-  req.login(user, () => res.redirect('/'));
+  const linkValid = await sql.checkLinkValidity(accountId,
+      verificationToken);
+  if (!linkValid) {
+    req.flash('error', `Link has either expired or is invalid`);
+    res.redirect('/login');
+  } else {
+    const user = await sql.emailVerification(accountId, verificationToken);
+    req.login(user, () => res.redirect('/'));
+  }
 });
 
 module.exports = router;
