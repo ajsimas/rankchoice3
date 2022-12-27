@@ -24,7 +24,7 @@ function createPoll(poll) {
     const query = `INSERT INTO poll (poll_web_id,name,date_created,\
 date_modified)
 OUTPUT Inserted.poll_id
-VALUES (@poll_web_id,@name,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+VALUES (@poll_web_id,@name,GETUTCDATE(),GETUTCDATE())`;
     const request = new Request(query, async (err, rowCount, rows) => {
       if (err) {
         console.log(err);
@@ -49,8 +49,8 @@ VALUES (@poll_web_id,@name,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
 function createCandidates(pollId, optionNum, name) {
   const promise = new Promise((resolve, reject) => {
     const query = `INSERT INTO candidate (poll_id,option_num,name,
-date_created,date_modified) VALUES (@pollId,@optionNum,@name,CURRENT_TIMESTAMP,\
-CURRENT_TIMESTAMP)`;
+date_created,date_modified) VALUES (@pollId,@optionNum,@name,GETUTCDATE(),\
+GETUTCDATE())`;
     const request = new Request(query, (err, rowCount, rows) => {
       resolve(true);
     });
@@ -152,13 +152,13 @@ async function recordVote(poll, body, sessionId) {
 function recordVoteSql(vote) {
   const promise = new Promise((resolve, reject) => {
     const query = `UPDATE vote
-SET rankchoice=@rankChoice,date_modified=CURRENT_TIMESTAMP
+SET rankchoice=@rankChoice,date_modified=GETUTCDATE()
 WHERE candidate_id=@candidateId AND voter_id=@voterId
 IF @@ROWCOUNT=0
 INSERT INTO vote
 (candidate_id,voter_id,rankchoice,date_created, date_modified)
-VALUES (@candidateId,@voterId,@rankChoice,CURRENT_TIMESTAMP,\
-CURRENT_TIMESTAMP)`;
+VALUES (@candidateId,@voterId,@rankChoice,GETUTCDATE(),\
+GETUTCDATE())`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
       resolve(true);
@@ -205,7 +205,7 @@ function saveVoter(sessionId, pollId, name) {
 date_modified)
 OUTPUT INSERTED.voter_id,INSERTED.session_id,INSERTED.name
 VALUES (@sessionId,@pollId,@name,\
-CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`;
+GETUTCDATE(),GETUTCDATE())`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
       const voter = {};
@@ -289,8 +289,8 @@ function saveEmailVerificationLink(userId, verificationToken) {
   const promise= new Promise((resolve, reject) => {
     const query = `INSERT INTO email_link (user_id, verification_token, \
 link_type, date_created, date_modified, date_expiration)
-VALUES (@userId, @verificationToken, 'email verification', CURRENT_TIMESTAMP, \
-CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`;
+VALUES (@userId, @verificationToken, 'email verification', GETUTCDATE(), \
+GETUTCDATE(), DATEADD(MINUTE,480,GETUTCDATE()))`;
     const request = new Request(query, (err, rowCount, rows) => {
       if (err) console.log(err);
       resolve();
