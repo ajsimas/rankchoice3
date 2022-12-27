@@ -267,17 +267,35 @@ WHERE username=@username`;
 function signupLocal(username, password, salt, accountId, verificationToken) {
   const promise = new Promise((resolve, reject) => {
     const query = `INSERT INTO [rankchoice].[dbo].[user] (username,\
-hashed_password, salt, account_id, verification_token, email_verified)
+hashed_password, salt, account_id, email_verified)
 OUTPUT Inserted.user_id
-VALUES (@username,@password,@salt,@accountId,@verificationToken,0)`;
-    const request = new Request(query, (err, rowCount, rows) => {
-      resolve({id: rows[0][0].value,
+VALUES (@username,@password,@salt,@accountId,0)`;
+    const request = new Request(query, async (err, rowCount, rows) => {
+      const userId = rows[0][0].value;
+      await saveEmailVerificationLink(userId, verificationToken);
+      resolve({id: userId,
         username: username});
     });
     request.addParameter('username', TYPES.VarChar, username);
     request.addParameter('password', TYPES.VarChar, password.toString('hex'));
     request.addParameter('salt', TYPES.VarChar, salt.toString('hex'));
     request.addParameter('accountId', TYPES.VarChar, accountId);
+    connection.execSql(request);
+  });
+  return promise;
+}
+
+function saveEmailVerificationLink(userId, verificationToken) {
+  const promise= new Promise((resolve, reject) => {
+    const query = `INSERT INTO email_link (user_id, verification_token, \
+link_type, date_created, date_modified, date_expiration)
+VALUES (@userId, @verificationToken, 'email verification', CURRENT_TIMESTAMP, \
+CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`;
+    const request = new Request(query, (err, rowCount, rows) => {
+      if (err) console.log(err);
+      resolve();
+    });
+    request.addParameter('userId', TYPES.Int, userId);
     request.addParameter('verificationToken', TYPES.VarChar, verificationToken);
     connection.execSql(request);
   });
@@ -287,13 +305,16 @@ VALUES (@username,@password,@salt,@accountId,@verificationToken,0)`;
 function emailVerification(accountId, verificationToken) {
   const promise = new Promise((resolve, reject) => {
     const query = `UPDATE [rankchoice].[dbo].[user]
-SET email_verified=1
-WHERE account_id=@accountId AND verification_token=@verificationToken`;
+    SET [rankchoice].[dbo].[user].email_verified=1
+    FROM [rankchoice].[dbo].[user]
+    JOIN email_link
+    ON [rankchoice].[dbo].[user].user_id = email_link.user_id
+    WHERE [rankchoice].[dbo].[user].account_id=@accountId AND \
+verification_token=@verificationToken`;
     const request = new Request(query, (err, rowCount, rows) => {
       const query = `SELECT user_id,username
       FROM [rankchoice].[dbo].[user]
-      WHERE account_id=@accountId AND
-      verification_token=@verificationToken`;
+      WHERE account_id=@accountId`;
       const request = new Request(query, (err, rowCount, rows) => {
         resolve({id: rows[0][0].value, username: rows[0][1].value});
       });
