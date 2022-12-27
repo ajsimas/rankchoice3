@@ -309,6 +309,20 @@ WHERE account_id=@accountId AND verification_token=@verificationToken`;
   return promise;
 }
 
+function accountExists(emailAddress) {
+  const promise = new Promise((resolve, reject) => {
+    const query = `SELECT username FROM [rankchoice].[dbo].[user] \
+WHERE username=@emailAddress`;
+    const request = new Request(query, (err, rowCount, rows) => {
+      if (rows.length > 0) resolve(true);
+      else resolve(false);
+    });
+    request.addParameter('emailAddress', TYPES.VarChar, emailAddress);
+    connection.execSql(request);
+  });
+  return promise;
+}
+
 const connection = new Connection(config);
 connection.on('connect', function(err) {
   if (err) console.log(err);
@@ -319,4 +333,4 @@ connection.connect();
 
 module.exports = {connection, createPoll, loadPoll, loadCandidates,
   recordVote, loadVotes, lookupVoter, loadPost, loginLocal, signupLocal,
-  emailVerification};
+  emailVerification, accountExists};

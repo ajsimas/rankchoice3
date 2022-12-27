@@ -65,7 +65,13 @@ function generateId() {
   return id;
 }
 
-router.post('/signup', (req, res) => {
+router.post('/signup', async (req, res) => {
+  if (await sql.accountExists(req.body.username) === true) {
+    sendEmail.accountExistsAlready(req.body.username);
+    req.flash('info', 'Check email for further account signup instructions');
+    res.redirect('/');
+    return;
+  }
   const salt = crypto.randomBytes(16);
   crypto.pbkdf2(req.body.password, salt, 310000, 32, 'sha256',
       async (err, hashedPassword) => {
@@ -76,9 +82,9 @@ router.post('/signup', (req, res) => {
             salt, accountId, verificationToken);
         sendEmail.emailVerification(user.username, accountId,
             verificationToken);
-        req.login(user, () => {
-          res.redirect('/');
-        });
+        req.flash('info', `Check email for further account signup \
+instructions`);
+        res.redirect('/');
       });
 });
 

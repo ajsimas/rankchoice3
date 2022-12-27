@@ -43,4 +43,43 @@ ${verificationToken}">
   }
 }
 
-module.exports = {emailVerification};
+async function accountExistsAlready(emailAddress) {
+  try {
+    const client = new EmailClient(connectionString);
+    const emailMessage = {
+      sender: '<donotreply@rc.simas.io>',
+      content: {
+        subject: 'Rankchoice Voting - Account Creation Request',
+        html: `<style>
+        a {
+          border: 2px;
+          border-color: black;
+          border-style: solid;
+          border-radius: 5px;
+          padding: 5px 10px;
+        }
+      </style>
+      <h1>Account already exists</h1>
+      <div>An account creation was requested for the email address: \
+${emailAddress}, but an account with that email address already exists. If you \
+initiated this requested, you can reset your password using the link below. If \
+you did not initiate this request, please ignore this email.</div>
+      <a href="TODO">
+        Reset Password
+      </a>`,
+      },
+      recipients: {
+        to: [
+          {
+            email: `<${emailAddress}>`,
+          },
+        ],
+      },
+    };
+    await client.send(emailMessage);
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+module.exports = {emailVerification, accountExistsAlready};
