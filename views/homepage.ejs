@@ -1,31 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
-  <%- include('partials/head') %>
-  <body>
-    <%- include('partials/header') %>
-    <div class="container mt-3">
-      <% if (info != '') {%>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <%= info %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-      <% } %> 
-      <div>
-        <% if (user != undefined) { %>
-          <%= user.username %>
-          <form action="logout" method="post">
-            <button class="btn btn-primary">Logout</button>
-          </form>
-        <% } else { %>
-          <a href="login">Login</a>
-        <% } %>
-      </div>
-        <div class="container-md text-center mt-3">
-          <h1>Rank Choice Voting</h1>
-          <a href="poll/create" class="btn btn-primary mt-5">Create Poll</a>
-        </div>
+<%- include('partials/head') %>
+
+<body>
+  <%- include('partials/header') %>
+  <div class="container mt-3">
+    <% if (info !='' ) {%>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <%= info %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-    <%- include('partials/bootstrapMinJS.ejs') %>
-    <%- include('partials/reload.ejs') %>
-  </body>
+    <% } %>
+    <div class="homepage-container">
+      <h1 class="heading--primary">What is rankchoice voting?</h1>
+      <main class="homepage-main">
+        <p>Rank choice voting, also known as instant-runoff voting, is a type of
+          voting
+          method in which voters rank candidates in order of preference rather than voting for a single
+          candidate.
+          If no candidate receives a majority of first-preference votes, the candidate with the fewest number of
+          votes is eliminated and their votes are redistributed to the remaining candidates based on the voters'
+          next choice. This process is repeated until one candidate receives a majority of the votes.
+
+          There are several benefits to using rank choice voting:
+        </p>
+        <ul>
+          <li>allows voters to express a more nuanced preference among candidates.</li>
+          <li>can reduce the need for negative campaigning, since candidates are incentivized to appeal to a
+            wider range of voters in order to be included as a second or third choice.</li>
+          <li>It can lead to more diverse representation, since rank choice voting can allow candidates who are not
+            the first choice of a majority of voters to win if they are the second or third choice of a large
+            number of voters.</li>
+          <li>It can reduce the influence of third-party candidates, who may split the vote and prevent a majority
+            from forming.</li>
+        </ul>
+        Overall, rank choice voting is designed to produce a result that more accurately reflects the will of
+        the voters and leads to more representative and less divisive elections.</p>
+      </main>
+      <a href="poll/create" class="btn btn-primary mt-5">Create Poll</a>
+    </div>
+  </div>
+  <%- include('partials/bootstrapMinJS.ejs') %>
+  <%- include('partials/reload.ejs') %>
+</body>
+
 </html>

@@ -1,0 +1,21 @@
+.header {
+  background-color: $color-primary-4;
+  height: 7rem;
+  color: black;
+  padding: 0 1.5rem;
+  border-bottom: 2px solid $color-primary-3;
+  
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &__logo {
+    color: $color-primary-2;
+    font-size: 2.5rem;
+    font-weight: 600;
+  }
+
+  &__login-container {
+    font-size: 2rem;
+  }
+}

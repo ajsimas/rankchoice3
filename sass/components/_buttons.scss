@@ -1,0 +1,12 @@
+.btn {
+  color: $color-primary-2;
+  text-decoration: none;
+  padding: 1rem;
+  padding: .8rem;
+
+  &--accent {
+    border-radius: 10px;
+    background-color: $color-primary-5;
+    color: $color-primary-2;
+  }
+}

@@ -3,3 +3,17 @@ body {
   font-weight: 400;
   line-height: 1.7;
 }
+
+.heading {
+  &--primary {
+    color: #f1faee;
+    font-size: 4rem;
+  }
+}
+
+.homepage-main {
+  max-width: 75rem;
+  font-size: 1.6rem;
+  text-align: left;
+  color: #f1faee;
+}
