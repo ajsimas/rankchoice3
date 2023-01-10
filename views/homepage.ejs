@@ -2,6 +2,7 @@
 <html lang="en">
   <%- include('partials/head') %>
   <body>
+    <%- include('partials/header') %>
     <div class="container mt-3">
       <% if (info != '') {%>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -25,5 +26,6 @@
         </div>
     </div>
     <%- include('partials/bootstrapMinJS.ejs') %>
+    <%- include('partials/reload.ejs') %>
   </body>
 </html>

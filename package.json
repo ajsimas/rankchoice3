@@ -6,7 +6,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch:sass": "node-sass sass/main.scss public/css/styles.css -w",
-
     "compile:sass": "node-sass sass/main.scss css/style.comp.css",
     "concat:css": "concat -o css/style.concat.css css/icon-font.css css/style.comp.css",
     "prefix:css": "postcss --use autoprefixer -b 'last 10 versions' css/style.concat.css -o css/style.prefix.css",
@@ -42,6 +41,7 @@
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
     "postcss-cli": "^10.1.0",
+    "reload": "^3.2.1",
     "tedious": "^11.0.8"
   },
   "devDependencies": {

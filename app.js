@@ -4,6 +4,7 @@ const engine = require('ejs-mate');
 const {mySession} = require('./express-session');
 const flash = require('connect-flash');
 const passport = require('passport');
+const reload = require('reload');
 
 // initialize express
 const app = express();
@@ -18,4 +19,5 @@ app.engine('ejs', engine);
 app.set('view engine', 'ejs');
 app.use('/', router);
 app.use('/', authRouter);
+reload(app);
 app.listen(8080);
